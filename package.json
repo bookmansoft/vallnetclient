@@ -1,0 +1,34 @@
+{
+  "name": "vallnetclient",
+  "version": "1.0.1",
+  "description": "Vallnet Client",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js --genesis --network=testnet --phrase=bookmansoft",
+    "cli": "node bin/cli",
+    "test": "mocha --reporter spec test/*.js"
+  },
+  "bin": {
+    "vc": "./bin/cli"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bookmansoft/vallnetclient.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bookmansoft/vallnetclient/issues"
+  },
+  "homepage": "https://github.com/bookmansoft/vallnetclient#readme",
+  "dependencies": {
+    "body-parser": "1.19.0",
+    "express": "4.17.0",
+    "gamegold": "^2.0.6",
+    "gamerpc": "^6.0.3",
+    "n64": "0.2.10",
+    "node-fetch": "2.3.0",
+    "socket.io": "2.2.0",
+    "uuid": "3.3.2"
+  }
+}
