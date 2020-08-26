@@ -9,7 +9,7 @@
     "test": "mocha --reporter spec test/*.js"
   },
   "bin": {
-    "vc": "./bin/cli"
+    "cnas": "./bin/cli"
   },
   "repository": {
     "type": "git",
