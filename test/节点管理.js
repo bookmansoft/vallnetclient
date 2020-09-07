@@ -18,6 +18,7 @@ let env = {
 }
 
 const remote = connector({
+    ip: common.testhost,
     type: env.network, 
     port: env.netport + env.offset
 });

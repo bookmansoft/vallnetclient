@@ -1,13 +1,13 @@
 const toolkit = require('gamerpc')
-
-const gamegold = require('gamegold');
-const util = gamegold.util;
-const encoding = gamegold.encoding;
-const HDPrivateKey = gamegold.hd.PrivateKey;
+const common = require('./common')
+const gamegold = require('gamegold')
+const util = gamegold.util
+const encoding = gamegold.encoding
+const HDPrivateKey = gamegold.hd.PrivateKey
 
 const config = {
   type:       'testnet',
-  ip:         '127.0.0.1',            //远程服务器地址
+  ip:         common.remotehost,      //远程服务器地址
   head:       'http',                 //远程服务器通讯协议，分为 http 和 https
   id:         'primary',              //默认访问的钱包编号
   apiKey:     'bookmansoft',          //远程服务器基本校验密码

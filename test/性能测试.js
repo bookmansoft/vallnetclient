@@ -3,16 +3,44 @@
  */
 
 const uuid = require('uuid/v1')
-const remote = (require('./util/connector'))();
-
+const common = require('./util/common')
 let env = {
     alice: {name: uuid()},
     recy: 100,
     recy2: 1000,
 };
 
+const exec = require('child_process').exec; 
+let child = null;
+const remote = (require('./util/connector'))({
+    ip: common.testhost,
+    type: 'main',
+});
+
 describe('性能测试', () => {
+    after(()=>{
+        //退出节点运行
+        if(child) {
+            child.kill('SIGTERM');
+        }
+    });
+
     before(async () => {
+        child = exec(`node index.js --genesis --network=main`, function(err, stdout, stderr) {
+            if(err) {
+                console.log(stderr);
+            } else {
+                // var data = JSON.parse(stdout);
+                // console.log(data);
+            }
+        });
+
+        child.on('exit', () => {
+            //console.log('node exit.');
+        });
+
+        await remote.wait(3000);
+
         await remote.execute('miner.setsync.admin', [true]);
         let ret = await remote.execute('block.tips', []);
         if(ret[0].height < 100) {

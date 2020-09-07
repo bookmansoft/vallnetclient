@@ -23,6 +23,7 @@ const remoteA = connector({
 
 //连接B链
 const remoteB = connector({
+  ip: common.testhost,
   type:   'main',
   structured: true,
 });
