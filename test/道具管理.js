@@ -24,7 +24,11 @@ let env = {
     props: [],
 }; 
 
-describe('道具管理流程', () => {
+describe('道具管理', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         await remote.execute('miner.setsync.admin', [true]);
         let ret = await remote.execute('block.tips', []);

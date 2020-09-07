@@ -18,6 +18,10 @@ let env = {
 };
 
 describe('账户管理', function() {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         await remote.execute('miner.setsync.admin', [true]);
         let ret = await remote.execute('block.tips', []);

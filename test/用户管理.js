@@ -38,6 +38,12 @@ let env = {
 };
 
 describe('用户管理', () => {
+    after(()=>{
+        remote.close();
+        remoteOperator.close();
+        monitor.close();
+    });
+
     before(async () => {
         await remote.execute('sys.devmode', [false]);
         await remote.execute('miner.setsync.admin', []);

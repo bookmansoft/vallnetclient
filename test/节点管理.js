@@ -29,13 +29,11 @@ describe('节点管理', () => {
         if(child) {
             child.kill('SIGTERM');
         }
+
+        remote.close();
     });
 
     it('节点运行：调度子进程运行节点', async () => {
-        //1. 拉取项目代码，进入项目根目录
-        //。。。
-
-        //2. 采用子进程模式调度节点自动运行
         child = exec(`node index.js --genesis --port-offset=${env.offset} --network=${env.network}`, function(err, stdout, stderr) {
             if(err) {
                 console.log(stderr);
@@ -45,7 +43,7 @@ describe('节点管理', () => {
             }
         });
 
-        child.on('exit', () => {
+        child.once('exit', () => {
             //console.log('node exit.');
         });
 

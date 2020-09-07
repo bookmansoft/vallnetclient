@@ -10,6 +10,10 @@ const remote = connector({structured: true});
 let env = {};
 
 describe('交易管理', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         //强制设置同步完成标志
         await remote.execute('miner.setsync.admin', [true]);

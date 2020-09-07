@@ -30,7 +30,11 @@ let agreement = {
     body: 'hello world',
 }
 
-describe('GIP0024', function() {
+describe('电子签章', function() {
+    after(()=>{
+        remote.close();
+    });
+
     before(async ()=>{
         //开启长连模式
         remote.setmode(remote.CommMode.ws, async () => { });

@@ -17,4 +17,4 @@ common.revHex = function revHex(data) {
 };
 
 common.testhost = '127.0.0.1';
-common.remotehost = '114.116.122.195';
+common.remotehost = '127.0.0.1';

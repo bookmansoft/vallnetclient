@@ -27,6 +27,10 @@ let types = [
 ];
 
 describe('锁仓机制 - GIP0027', function() {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         await remote.execute('miner.setsync.admin', []);
         let ret = await remote.execute('block.tips', []);
@@ -137,6 +141,8 @@ describe('锁仓机制 - GIP0027', function() {
         });
     
         it('查询: Alice查询余额，发现相关额度被解锁', async () => {
+            remote.wait(2000);
+
             let ret = await remote.execute('balance.all', [env.alice.name]);
             assert(ret.code == 0);
             assert(ret.result.locked == 0);

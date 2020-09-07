@@ -42,6 +42,9 @@ describe('跨链机制 - GIP0028', () => {
   after(()=>{
     //退出节点运行
     net_main.kill('SIGTERM');
+
+    remoteA.close();
+    remoteB.close();
   });
 
   before(async ()=>{
@@ -53,7 +56,7 @@ describe('跨链机制 - GIP0028', () => {
           // console.log(data);
       }
     });
-    net_main.on('exit', () => {
+    net_main.once('exit', () => {
       //console.log('node exit.');
     });
 

@@ -26,6 +26,10 @@ let env = {
 const remote = connector();
 
 describe('节点证书', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         //强制设置同步完成标志
         await remote.execute('miner.setsync.admin', [true]);

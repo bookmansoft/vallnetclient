@@ -8,6 +8,10 @@ const assert = require('assert')
 const remote = (require('./util/connector'))({structured: true})
 
 describe('凭证管理', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         //强制设置同步完成标志
         await remote.execute('miner.setsync.admin', []);

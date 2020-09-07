@@ -16,6 +16,10 @@ let env = {
 };
 
 describe('多签合约 - 利用托管合约实现多签合约流程', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         await remote.execute('miner.setsync.admin', [true]);
         let ret = await remote.execute('block.tips', []);

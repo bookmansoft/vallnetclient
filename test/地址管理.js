@@ -9,6 +9,10 @@ const remote = (require('./util/connector'))();
 let env = {};
 
 describe('地址管理', function() {
+    after(()=>{
+        remote.close();
+    });
+
     it('创建地址：创建一个新地址', async () => {
         let ret = await remote.execute('address.create', []);
         assert(!ret.error);

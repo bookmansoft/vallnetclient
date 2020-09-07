@@ -30,6 +30,10 @@ let env = {
 const remote = connector();
 
 describe('节点选举', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         await remote.execute('miner.setsync.admin', [true]);
         let ret = await remote.execute('block.tips', []);

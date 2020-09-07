@@ -12,6 +12,10 @@ const remote = (require('./util/connector'))({structured: true});
 let cp = {};
 
 describe('机构管理', () => {
+    after(()=>{
+        remote.close();
+    });
+
     before(async () => {
         await remote.execute('miner.setsync.admin', [true]);
         let ret = await remote.execute('block.tips', []);
