@@ -7,7 +7,7 @@ const uuid = require('uuid/v1')
 const assert = require('assert')
 const remote = (require('./util/connector'))({structured: true})
 
-describe('凭证管理', () => {
+describe('5. 凭证管理', () => {
     after(()=>{
         remote.close();
     });
@@ -43,12 +43,12 @@ describe('凭证管理', () => {
             sn: ()=>{return "oid-bob-"+ uuid().slice(0,28);},     //订单编号
         };
 
-        it('一级市场发行 - CP不存在', async () => {
+        it('5.1 一级市场发行 - CP不存在', async () => {
             let ret = await remote.execute('stock.offer', [cp.name, 1000, 1000]);
             assert(!!ret.error);
         });
     
-        it('注册CP', async () => {
+        it('5.1 一级市场发行 - 非法账户', async () => {
             //注册一个新的CP, 指定 15% 的媒体分成
             let ret = await remote.execute('cp.create', [cp.name, '127.0.0.1,,slg,15']);
     
@@ -76,14 +76,12 @@ describe('凭证管理', () => {
             //确保该CP数据上链
             await remote.execute('miner.generate.admin', [1]);
             await remote.wait(1000);
-        });
-    
-        it('一级市场发行 - 非法账户', async () => {
-            let ret = await remote.execute('stock.offer', [cp.id, 1000, 1000, alice.name]);
+
+            ret = await remote.execute('stock.offer', [cp.id, 1000, 1000, alice.name]);
             assert(!!ret.error);
         });
     
-        it('一级市场发行 - 非法数量', async () => {
+        it('5.1 一级市场发行 - 非法数量', async () => {
             //数量太多
             let ret = await remote.execute('stock.offer', [cp.id, 1.1e+6, 1000]);
             assert(!!ret.error);
@@ -98,7 +96,7 @@ describe('凭证管理', () => {
             assert(ret.result.stock.sum === 0);
         });
     
-        it('一级市场发行 - 非法金额', async () => {
+        it('5.1 一级市场发行 - 非法金额', async () => {
             //金额必须大于0
             let ret = await remote.execute('stock.offer', [cp.id, 1000, 0]);
             assert(!!ret.error);
@@ -118,7 +116,7 @@ describe('凭证管理', () => {
             assert(ret.result.stock.sum === 0);
         });
     
-        it('一级市场发行 - 成功', async () => {
+        it('5.1 一级市场发行 - 成功', async () => {
             //数量、价格符合标准，还要能够支付 5% 发行总额的手续费
             let ret = await remote.execute('stock.offer', [cp.id, 1000, 1000]);
             assert(!ret.error);
@@ -131,7 +129,7 @@ describe('凭证管理', () => {
             assert(ret.result.stock.price === 1000);
         });
     
-        it('一级市场购买', async () => {
+        it('5.2 一级市场购买', async () => {
             //Alice 购买凭证, 余额不足，失败
             let ret = await remote.execute('stock.purchase', [cp.id, 500, alice.name]);
             assert(!!ret.error);
@@ -164,7 +162,7 @@ describe('凭证管理', () => {
             assert(ret.result.list[0].price === 1000);
         });
     
-        it('无偿转让', async () => {
+        it('5.3 无偿转让', async () => {
             //转账总额超过凭证余额
             let ret = await remote.execute('stock.send', [cp.id, 600, bob.addr, alice.name]);
 
@@ -188,7 +186,7 @@ describe('凭证管理', () => {
             assert(ret.result.list[0].sum === 100);
         });
     
-        it('二级市场拍卖', async () => {
+        it('5.4 二级市场拍卖', async () => {
             //alice 挂牌 200 凭证
             let ret = await remote.execute('stock.bid', [cp.id, 200, 2000, alice.name]);
             assert(!ret.error);
@@ -202,7 +200,7 @@ describe('凭证管理', () => {
             assert(ret.result.list[0].stock.price === 2000);
         });
     
-        it('二级市场购买', async () => {
+        it('5.5 二级市场购买', async () => {
             //Bob购买凭证，因为金额不足失败
             let ret = await remote.execute('stock.auction', [cp.id, alice.addr, 100, 2000, bob.name]);
             assert(!!ret.error);
@@ -229,14 +227,12 @@ describe('凭证管理', () => {
             ret = await remote.execute('stock.list.wallet', [[['cid', cp.id], ['addr', bob.addr]]]);
             await remote.wait(1000);
             assert(ret.result.list[0].sum === 200);
-        });
-    
-        it('验证凭证分配的有效性', async () => {
-            //挖矿以确保数据上链
+
+            //验证凭证分配的有效性
             await remote.execute('miner.generate.admin', [1]);
             await remote.wait(1000);
 
-            let ret = await remote.execute('stock.record', [7, cp.id, 0]);
+            ret = await remote.execute('stock.record', [7, cp.id, 0]);
             assert(ret.result.list[0].price == 2000);
     
             ret = await remote.execute('stock.list', [[['cid', cp.id]]]);
@@ -254,7 +250,8 @@ describe('凭证管理', () => {
             }
         });
     
-        it('一级市场发行 - 累计分成不足不能继续发行', async () => {
+        it('5.6 商业支付: 发起支付交易，然后查询支付流水', async () => {
+            //累计分成不足不能继续发行
             let ret = await remote.execute('cp.byId', [cp.id]);
             assert(ret.result.stock.sum === 500); 
             assert(ret.result.stock.price === 1000);
@@ -274,17 +271,14 @@ describe('凭证管理', () => {
             assert(ret.result.stock.price === 1000);
             assert(ret.result.stock.hSum === 500);
             assert(ret.result.stock.hPrice === 1000);
-        });
-    
-        it('连挖30个区块，确保生成CP快照，确保交易分成顺利进行', async () => {
-            //在之前的测试中，连挖10个块尚不足以确保生成CP快照，改为30个后测试恢复正常
+
+            //连挖30个区块，确保生成CP快照，确保交易分成顺利进行
+            //@note 在之前的测试中，连挖10个块尚不足以确保生成CP快照，改为30个后测试恢复正常
             await remote.execute('miner.generate.admin', [30]); 
             await remote.wait(1000);
-        });
-    
-        it('发起支付交易，然后查询支付流水', async () => {
+
             //发起一笔支付交易，使用bob的子账户支付
-            let ret = await remote.execute('order.pay', [cp.id, bob.name, bob.sn(), 1000000000, bob.name]);
+            ret = await remote.execute('order.pay', [cp.id, bob.name, bob.sn(), 1000000000, bob.name]);
             assert(!ret.error);
             //@note 此处sn使用了随机数，实际运用中建议使用自增长序列，以便后期增量查询
             //@note 上述支付将按照约定，分配给凭证持有方(alice bob)、媒体方(alice)
@@ -303,22 +297,22 @@ describe('凭证管理', () => {
             assert(!ret.error && ret.result.list.length === 2);
         });
     
-        it('查看媒体分润', async () => {
-            console.log("当前CP信息:" + JSON.stringify(cp.id,));
+        it('5.7 查询媒体分润', async () => {
+            //console.log("当前CP信息:" + JSON.stringify(cp.id,));
             //查询作为bob的推荐者，alice的媒体分成 - 两笔共 20 分得 15% = 3, 注意媒体分成是提前结算的
             let ret = await remote.execute('stock.record', [5, cp.id, 0, [['@total','price']]]);
             assert(!ret.error);
             assert(ret.result.price === 300000000, ret.result.price);
         });
 
-        it('查看凭证分润', async () => {
+        it('5.8 查询凭证分润', async () => {
             //查询凭证分成（扣除媒体分成后）, 包括 alice(300/5000500) 的两笔， bob(200/5000500) 的两笔，合计 1700000000*500/5000500, CP保留利润不计入其中
             let ret = await remote.execute('stock.record', [4, cp.id, 0, [['@total','price']]]);
             assert(!ret.error);
             assert(ret.result.price === 169980, ret.result.price);
         });
 
-        it('一级市场发行 - 冷却期内不能继续发行', async () => {
+        it('5.9 一级市场扩发 - 冷却期内不能继续发行', async () => {
             let ret = await remote.execute('stock.offer', [cp.id, 1000, 1000]);
             assert(!!ret.error); //冷却期内不能继续发行
     
@@ -335,14 +329,13 @@ describe('凭证管理', () => {
         });
 
         /**
-         * 注：由于连挖4032个块会导致连接器超时，在 BLOCK_DAY = 144 的设定下，可跳过如下两个单元测试
+         * 注：由于连挖4032个块会导致连接器超时，在 BLOCK_DAY = 144 的设定下，可跳过本条测试
          */
-        it('连续记账，确保度过冷却期', async () => {
+        it('5.9 一级市场扩发 - 度过冷却期后再次发行凭证成功', async () => {
+            //连续记账，确保度过冷却期
             await remote.execute('miner.generate.admin', [42]);
             await remote.wait(1000);
-        });
-    
-        it('再次发行凭证成功', async () => {
+
             let ret = await remote.execute('stock.offer', [cp.id, 1000, 1000]);
             assert(!ret.error);
     

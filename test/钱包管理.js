@@ -19,7 +19,7 @@ let env = {
     robin:  {id: uuid(), key:null, address:null},
 };
 
-describe('钱包管理', () => {
+describe('4. 钱包管理', () => {
     after(()=>{
         remote.close();
     });
@@ -58,7 +58,7 @@ describe('钱包管理', () => {
         env.address = ret.id;
     });
 
-    it('创建钱包：在钱包管理器中创建一个新钱包', async () => {
+    it('4.1 创建钱包：在钱包管理器中创建一个新钱包', async () => {
         //创建新钱包
         let msg = await remote.execute('wallet.create', [null, 'pubkeyhash', 1, 1]);
         env.robin.key = msg.account.accountKey;
@@ -87,18 +87,18 @@ describe('钱包管理', () => {
         remote.setup({type: 'testnet', id: 'primary'});
     });
 
-    it('列表钱包：列表钱包管理器中的所有钱包', async () => {
+    it('4.2 列表钱包：列表钱包管理器中的所有钱包', async () => {
         let msg = await remote.execute('wallet.list', []);
         assert(msg.indexOf('primary') >= 0);
         assert(msg.indexOf(env.robin.id) >= 0);
     });
 
-    it('查询钱包：查询钱包概要说明', async () => {
+    it('4.3 查询钱包：查询钱包概要说明', async () => {
         let msg = await remote.execute('wallet.info', [env.robin.id]);
         assert(!msg.error && msg.id == env.robin.id);
     });
 
-    it('备份密钥：用助记词模式导出钱包密钥作为备份', async () => {
+    it('4.4 备份密钥：用助记词模式导出钱包密钥作为备份', async () => {
         //如下指令会在项目根目录下，导出名为'testnet-wallet.encrypt'的文件，其中'testnet'为网络类型
         let msg = await remote.execute('wallet.exportmnemonic', ['bookmansoft']);
         assert(!msg.error);
@@ -110,48 +110,48 @@ describe('钱包管理', () => {
         //4. 启动节点，注意启动时不要带'--genesis'参数，因为该参数指示重建创世区块，并为创世者设置专用钱包库
     });
 
-    it('导出备份：从钱包管理器中导出钱包备份', async () => {
+    it('4.5 导出备份：从钱包管理器中导出钱包备份', async () => {
         let msg = await remote.execute('wallet.export', ['backup.txt']);
         assert(!msg.error && msg == true);
     });
 
-    it('导入备份：将钱包备份导入钱包管理器', async () => {
+    it('4.6 导入备份：将钱包备份导入钱包管理器', async () => {
         let msg = await remote.execute('wallet.import', ['backup.txt']);
         assert(!msg.error && msg == true);
     });
 
-    it('根据输入地址，导出私钥', async () => {
-        let ret = await remote.execute('key.export.private', [env.address]);
-        assert(!ret.error);
-        env.prvkey = ret;
-    });
+    // it('根据输入地址，导出私钥', async () => {
+    //     let ret = await remote.execute('key.export.private', [env.address]);
+    //     assert(!ret.error);
+    //     env.prvkey = ret;
+    // });
 
-    it('根据输入地址，导出公钥', async () => {
-        let ret = await remote.execute('key.export.public', [env.address]);
-        assert(!ret.error);
-    });
+    // it('根据输入地址，导出公钥', async () => {
+    //     let ret = await remote.execute('key.export.public', [env.address]);
+    //     assert(!ret.error);
+    // });
 
-    it('导出根密钥和助记词', async () => {
-        let ret = await remote.execute('key.master.admin', []);
-        assert(!ret.error);
-    });
+    // it('导出根密钥和助记词', async () => {
+    //     let ret = await remote.execute('key.master.admin', []);
+    //     assert(!ret.error);
+    // });
 
-    it('导入私钥', async () => {
-        //普通钱包可以导入新的私钥
-        let ret = await remote.execute('key.import.private', ['default', env.import.key.toSecret('testnet')]);
-        assert(!ret.error); //当RPC函数返回NULL时，无法使用此种错误检测。因此需要避免在RPC函数中直接返回Null，可以替之以0或布尔值
-    });
+    // it('导入私钥', async () => {
+    //     //普通钱包可以导入新的私钥
+    //     let ret = await remote.execute('key.import.private', ['default', env.import.key.toSecret('testnet')]);
+    //     assert(!ret.error); //当RPC函数返回NULL时，无法使用此种错误检测。因此需要避免在RPC函数中直接返回Null，可以替之以0或布尔值
+    // });
 
-    it('导入公钥', async () => {
-        //@note 只有watch-only钱包才可以导入公钥
-        remote.setup({type: 'testnet', id: env.address});
-        let ret = await remote.execute('key.import.public', ['default', env.import.pub.toString('hex')]);
-        assert(!ret.error);
-    });
+    // it('导入公钥', async () => {
+    //     //@note 只有watch-only钱包才可以导入公钥
+    //     remote.setup({type: 'testnet', id: env.address});
+    //     let ret = await remote.execute('key.import.public', ['default', env.import.pub.toString('hex')]);
+    //     assert(!ret.error);
+    // });
 
-    it('导入地址', async () => {
-        //@note 只有watch-only钱包才可以导入地址
-        let ret = await remote.execute('key.import.address', ['default', env.import.addr1]);
-        assert(!ret.error);
-    });
+    // it('导入地址', async () => {
+    //     //@note 只有watch-only钱包才可以导入地址
+    //     let ret = await remote.execute('key.import.address', ['default', env.import.addr1]);
+    //     assert(!ret.error);
+    // });
 });

@@ -17,7 +17,7 @@ let env = {
     },
 };
 
-describe('账户管理', function() {
+describe('1. 账户管理', function() {
     after(()=>{
         remote.close();
     });
@@ -31,25 +31,25 @@ describe('账户管理', function() {
         await remote.wait(500);
     });
 
-    it('创建一个新账户', async () => {
+    it('1.1 创建账户: 创建一个新账户', async () => {
         let ret = await remote.execute('account.create', [{name: env.alice.name}]);
         assert(!ret.error);
         assert(ret.name == env.alice.name);
     });
 
-    it('查询账户', async () => {
+    it('1.2 查询账户', async () => {
         let ret = await remote.execute('account.get', [env.alice.name]);
         assert(!ret.error);
         assert(ret.name == env.alice.name);
     });
 
-    it('列表账户', async () => {
+    it('1.3 列表账户', async () => {
         let ret = await remote.execute('account.list', []);
         assert(!ret.error);
         assert(Object.keys(ret).indexOf(env.alice.name) != -1);
     });
 
-    it('查询账户余额', async () => {
+    it('1.4 查询账户余额', async () => {
         let ret = await remote.execute('balance.confirmed', [env.alice.name]);
         assert(!ret.error);
 
@@ -60,17 +60,17 @@ describe('账户管理', function() {
         assert(!ret.error);
     });
 
-    it('列表收款记录', async () => {
+    it('1.5 列表收款记录', async () => {
         let ret = await remote.execute('account.listreceived', []);
         assert(!ret.error);
     });
 
-    it('查询收款总额', async () => {
+    it('1.6 查询收款总额', async () => {
         let ret = await remote.execute('account.received', [env.alice.name]);
         assert(!ret.error);
     });
 
-    it('查询指定账户变更日志', async () => {
+    it('1.7 查询日志', async () => {
         let ret = await remote.execute('balance.log', [env.alice.name]);
         assert(!ret.error);
     });

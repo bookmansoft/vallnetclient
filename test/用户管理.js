@@ -37,7 +37,7 @@ let env = {
     amount: 100000000,
 };
 
-describe('用户管理', () => {
+describe('2. 用户管理', () => {
     after(()=>{
         remote.close();
         remoteOperator.close();
@@ -57,7 +57,7 @@ describe('用户管理', () => {
         await remote.execute('sys.devmode', [true]);
     });
 
-    it('分配令牌：超级用户为普通用户映射账户并分配令牌', async () => {
+    it('2.1 分配令牌：超级用户为普通用户映射账户并分配令牌', async () => {
         //超级用户执行指令，为普通用户分配令牌
         let ret = await remote.execute('sys.createAuthToken', [env.account]);
 
@@ -73,7 +73,7 @@ describe('用户管理', () => {
         });
     });
 
-    it('添加成员：超级用户将指定用户加入指定角色的成员列表', async () => {
+    it('2.2 添加成员：超级用户将指定用户加入指定角色的成员列表', async () => {
         //添加前：普通用户执行受限指令 - 失败
         let ret = await remoteOperator.execute('address.create', []);
         assert(ret.error);
@@ -87,7 +87,7 @@ describe('用户管理', () => {
         assert(!ret.error);
     });
 
-    it('移除成员：超级用户将指定用户移出指定角色的成员列表', async () => {
+    it('2.3 移除成员：超级用户将指定用户移出指定角色的成员列表', async () => {
         //超级用户将普通用户从'address'前缀分组移除
         let ret = await remote.execute('sys.groupPrefix', [[['address', env.account]], true]);
         assert(!ret.error);
@@ -97,16 +97,16 @@ describe('用户管理', () => {
         assert(ret.error);
     });
 
-    it('初始化：在节点重启事件处理句柄中，从业务中台导入权限初始设定', async () => {
+    it('2.4 初始化：在节点重启事件处理句柄中，从业务中台导入权限初始设定', async () => {
         //订阅并监控主网重启事件
         await monitor.setmode(monitor.CommMode.ws).watch(async function(msg) {
             //当捕获到重启事件时，重新设定ACL
-            console.log('Info: Got event chain/full, Try to reset ACL...');
+            //console.log('Info: Got event chain/full, Try to reset ACL...');
 
             let ret = await remote.execute('sys.groupPrefix', [[['address', env.account]]]);
             assert(!ret.error);
 
-            console.log('Info: Finished Reset ACL.');
+            //console.log('Info: Finished Reset ACL.');
         }, 'chain/full').execute('subscribe', ['chain/full']);
 
         //强制设置同步完成标志，以模拟触发全节点[chain/full]事件
@@ -115,7 +115,7 @@ describe('用户管理', () => {
         await remote.wait(200);
     });
 
-    it('用户转账：超级用户为普通用户转账', async () => {
+    it('2.5 用户转账：超级用户为普通用户转账', async () => {
         //转账前：账户余额等于零
         let ret = await remoteOperator.execute('balance.all', []);
         assert(!ret.error && ret.result.confirmed == 0);

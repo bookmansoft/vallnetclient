@@ -23,7 +23,7 @@ const remote = connector({
     port: env.netport + env.offset
 });
 
-describe('节点管理', () => {
+describe('9. 节点管理', () => {
     after(()=>{
         //退出节点运行
         if(child) {
@@ -33,7 +33,7 @@ describe('节点管理', () => {
         remote.close();
     });
 
-    it('节点运行：调度子进程运行节点', async () => {
+    it('9.1 节点运行：调度子进程运行节点', async () => {
         child = exec(`node index.js --genesis --port-offset=${env.offset} --network=${env.network}`, function(err, stdout, stderr) {
             if(err) {
                 console.log(stderr);
@@ -50,12 +50,12 @@ describe('节点管理', () => {
         await remote.wait(3000);
     });
 
-    it('自动记账：设置节点自动记账', async () => {
+    it('9.2 自动记账：设置节点自动记账', async () => {
         let ret = await remote.execute('miner.set.admin', [true]);
         assert(!ret.error);
     });
 
-    it('手动记账：设置节点手动记账', async () => {
+    it('9.3 手动记账：设置节点手动记账', async () => {
         let ret = await remote.execute('miner.set.admin', [false]);
         assert(!ret.error);
 
@@ -76,28 +76,38 @@ describe('节点管理', () => {
         assert(env.height == parseInt(ret[0].height) - 1);
     });
 
-    it('查询记账设置：查询记账设置的当前状态', async () => {
+    it('9.4 查询记账设置：查询记账设置的当前状态', async () => {
         let ret = await remote.execute('miner.check', []);
         assert(!ret.error);
         assert(ret == false);
     });
 
-    it('查询记账难度：查询当前记账难度', async () => {
+    it('9.5 查询记账难度：查询当前记账难度', async () => {
         let ret = await remote.execute('miner.difficulty', []);
         assert(!ret.error);
     });
 
-    it('查询区块信息：查询指定区块信息', async () => {
+    it('9.6 查询区块信息：查询指定区块信息', async () => {
         let ret = await remote.get(`block/${env.blockid}`);
         assert(!ret.error);
     });
 
-    it('查询区块列表：获取近期区块列表', async () => {
+    it('9.7 查询区块数据：获取区块原始信息', async () => {
+        let msg = await remote.execute('getRawBlock', [env.blockid]);
+        assert(!msg.error);
+    });
+
+    it('9.8 查询区块概要：获取区块概要信息', async () => {
+        let msg = await remote.execute('getBlockOverview', [env.blockid]);
+        assert(!msg.error);
+    });
+
+    it('9.9 查询区块列表：获取近期区块列表', async () => {
         let msg = await remote.get('blocks');
         assert(!msg.error);
     });
 
-    it('查询同步：获取同步状态', async () => {
+    it('9.10 查询同步：获取同步状态', async () => {
         //设置长连模式
         remote.setmode(remote.CommMode.ws);
 
@@ -105,67 +115,33 @@ describe('节点管理', () => {
         assert(!msg.error);
     });
 
-    it('查询区块概要：获取区块概要信息', async () => {
-        let msg = await remote.execute('getBlockOverview', [env.blockid]);
-        assert(!msg.error);
-    });
-
-    it('查询区块数据：获取区块原始信息', async () => {
-        let msg = await remote.execute('getRawBlock', [env.blockid]);
-        assert(!msg.error);
-    });
-
-    it('查询系统概要：获取系统概要信息', async () => {
+    it('9.11 查询系统概要：获取系统概要信息', async () => {
         let msg = await remote.execute('sys.info', []);
         assert(!msg.error);
     });
 
-    it('测试长连下异步回调应答是否匹配', async () => {
-        try {
-            await remote.execute('miner.setsync.admin', []);
+    // it('测试长连下异步回调应答是否匹配', async () => {
+    //     try {
+    //         await remote.execute('miner.setsync.admin', []);
 
-            for(let i = 0; i < 10; i++) {
-                let msg = await remote.execute('tx.list', []);
-                assert(msg[0].account);
+    //         for(let i = 0; i < 10; i++) {
+    //             let msg = await remote.execute('tx.list', []);
+    //             assert(msg[0].account);
 
-                msg = await remote.execute('balance.all', []);
-                assert(msg.confirmed);
-            }
-        } catch(e) {
-            console.log(e.message);
-        }
-    });
+    //             msg = await remote.execute('balance.all', []);
+    //             assert(msg.confirmed);
+    //         }
+    //     } catch(e) {
+    //         console.log(e.message);
+    //     }
+    // });
 
-    it('查询块链顶部：获取当前主链顶部区块哈希', async () => {
-        let ret = await remote.execute('block.best', []);
-        assert(!ret.error);
-        env.hash = ret;
-    });
-
-    it('查询块链高度：获取当前主链区块数量', async () => {
-        let ret = await remote.execute('block.count', []);
-        assert(!ret.error);
-        env.height = ret;
-    });
-
-    it('查询区块：根据区块哈希查询区块内容', async () => {
-        let ret = await remote.execute('block.info', [env.hash]);
-        assert(!ret.error);
-        assert(ret.hash == env.hash);
-    });
-
-    it('查询区块：根据区块高度查询区块内容', async () => {
-        let ret = await remote.execute('block.info.byheight', [env.height]);
-        assert(!ret.error);
-        assert(ret.hash == env.hash);
-    });
-
-    it('查询分叉：列表所有分叉的头部信息', async () => {
+    it('9.12 查询分叉：列表所有分叉的头部信息', async () => {
         let ret = await remote.execute('block.tips', []);
         assert(!ret.error);
     });
 
-    it('重置区块：重置区块头至指定区块', async () => {
+    it('9.13 重置区块：重置区块头至指定区块', async () => {
         await remote.execute('miner.generate.admin', [1]);
 
         let ret = await remote.execute('block.reset.admin', [env.height]);
@@ -176,39 +152,76 @@ describe('节点管理', () => {
         assert(env.height == ret);
     });
 
-    it('系统状态：查询系统概要信息', async () => {
-        let ret = await remote.execute('sys.info', []);
+    it('9.14 查询块链顶部：获取当前主链顶部区块哈希', async () => {
+        let ret = await remote.execute('block.best', []);
         assert(!ret.error);
-        assert(ret.version == 'v2.0.0');
+        env.hash = ret;
     });
 
-    it('块链状态：查询块链概要信息', async () => {
-        let ret = await remote.execute('sys.blockinfo', []);
+    it('9.15 查询块链高度：获取当前主链区块数量', async () => {
+        let ret = await remote.execute('block.count', []);
         assert(!ret.error);
+        env.height = ret;
     });
 
-    it('网络状态：查询网络概要信息', async () => {
+    it('9.16 网络状态：查询网络概要信息', async () => {
         let ret = await remote.execute('sys.networkinfo', []);
         assert(!ret.error);
     });
 
-    it('节点状态：查询对等节点概要信息', async () => {
+    it('9.17 节点状态：查询对等节点概要信息', async () => {
         let ret = await remote.execute('sys.peerinfo', []);
         assert(!ret.error);
     });
 
-    it('矿机状态：查询矿机概要信息', async () => {
+    it('9.18 矿机状态：查询矿机概要信息', async () => {
         let ret = await remote.execute('sys.mininginfo', []);
         assert(!ret.error);
     });
 
-    it('通证状态：查询通证概要信息', async () => {
+    it('9.19 通证状态：查询通证概要信息', async () => {
         let ret = await remote.execute('sys.txoinfo', []);
         assert(!ret.error);
     });
     
-    it('查询连接：查询当前连接数', async () => {
+    it('9.20 查询连接：查询当前连接数', async () => {
         let ret = await remote.execute('sys.connectioncount', []);
         assert(!ret.error);
     });
+
+    it('9.21 查询块链顶部', async () => {
+        let ret = await remote.execute('block.best', []);
+        assert(!ret.error);
+        env.hash = ret;
+    });
+
+    it('9.22 查询块链高度', async () => {
+        let ret = await remote.execute('block.count', []);
+        assert(!ret.error);
+        env.height = ret;
+    });
+
+    // it('查询区块：根据区块哈希查询区块内容', async () => {
+    //     let ret = await remote.execute('block.info', [env.hash]);
+    //     assert(!ret.error);
+    //     assert(ret.hash == env.hash);
+    // });
+
+    // it('查询区块：根据区块高度查询区块内容', async () => {
+    //     let ret = await remote.execute('block.info.byheight', [env.height]);
+    //     assert(!ret.error);
+    //     assert(ret.hash == env.hash);
+    // });
+
+    // it('系统状态：查询系统概要信息', async () => {
+    //     let ret = await remote.execute('sys.info', []);
+    //     assert(!ret.error);
+    //     assert(ret.version == 'v2.0.0');
+    // });
+
+    // it('块链状态：查询块链概要信息', async () => {
+    //     let ret = await remote.execute('sys.blockinfo', []);
+    //     assert(!ret.error);
+    // });
+
 });

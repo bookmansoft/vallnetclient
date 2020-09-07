@@ -24,7 +24,7 @@ let env = {
     props: [],
 }; 
 
-describe('道具管理', () => {
+describe('15. 道具管理', () => {
     after(()=>{
         remote.close();
     });
@@ -44,7 +44,7 @@ describe('道具管理', () => {
         .execute('subscribe', ['prop/receive']);
     });
 
-    it('机构注册：厂商注册', async () => {
+    it('15.1 机构注册：厂商注册', async () => {
         //注册一个新的CP, 指定 15% 的媒体分成
         let ret = await remote.execute('cp.create', [env.cp.name, '127.0.0.1,,slg,15']);
         assert(!ret.error);
@@ -58,8 +58,10 @@ describe('道具管理', () => {
         env.cp.id = ret.cid;
     });
 
-    it('创建道具：机构创建一个道具', async () => {
+    it('15.2 创建道具：机构创建一个道具', async () => {
         let ret = await remote.execute('prop.create', [env.cp.id, env.cp.name, 10000]);
+        assert(!ret.error);
+        ret = await remote.execute('prop.create', [env.cp.id, env.cp.name, 10000]);
         assert(!ret.error);
 
         await remote.execute('miner.generate.admin', [1]);
@@ -73,7 +75,19 @@ describe('道具管理', () => {
         }
     });
 
-    it('拍卖道具：道具拥有者拍卖道具', async () => {
+    it('15.3 转移道具：道具拥有者转移一个道具, 显示成功转移后的道具信息', async ()=> {
+        //Alice生成一个接收道具的地址
+        let ret = await remote.execute('address.create', [env.alice.name]);
+        assert(!ret.error);
+        env.alice.address = ret.address;
+
+        ret = await remote.execute('prop.send', [env.alice.address, env.props[1].pid]);
+
+        await remote.execute('miner.generate.admin', [1]);
+        await remote.wait(1000);
+    });
+
+    it('15.4 拍卖道具：道具拥有者拍卖道具', async () => {
         if(env.props.length > 0) {
             await remote.execute('prop.sale', [env.props[0].pid, 30000]);
             await remote.execute('miner.generate.admin', [1]);
@@ -83,7 +97,7 @@ describe('道具管理', () => {
         }
     });
 
-    it('竞拍道具：第三方参与竞拍道具', async () => {
+    it('15.5 竞拍道具：第三方参与竞拍道具', async () => {
         let sales = await remote.execute('prop.remoteQuery', [[['pst', 2], ['oid', env.cp.name]]]);
         if(sales.list.length > 0) {
             await remote.execute('prop.buy', [sales.list[0].pid, 30000]);
@@ -94,20 +108,8 @@ describe('道具管理', () => {
         }
     });
 
-    it('转移道具：道具拥有者转移一个道具, 显示成功转移后的道具信息', async ()=> {
-        //Alice生成一个接收道具的地址
-        let ret = await remote.execute('address.create', [env.alice.name]);
-        assert(!ret.error);
-        env.alice.address = ret.address;
-
-        ret = await remote.execute('prop.send', [env.alice.address, env.props[0].pid]);
-
-        await remote.execute('miner.generate.admin', [1]);
-        await remote.wait(1000);
-    });
-
-    it('熔铸道具：道具拥有者熔铸一个道具', async () => {
-        await remote.execute('prop.found', [env.props[0].pid, env.alice.name]);
+    it('15.6 熔铸道具：道具拥有者熔铸一个道具', async () => {
+        await remote.execute('prop.found', [env.props[1].pid, env.alice.name]);
 
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(1500);
@@ -119,6 +121,6 @@ describe('道具管理', () => {
                 count++;
             }
         }
-        assert(count == 0);
+        assert(count == 1);
     });
 });

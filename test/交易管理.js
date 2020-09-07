@@ -9,7 +9,7 @@ const remote = connector({structured: true});
 
 let env = {};
 
-describe('交易管理', () => {
+describe('10. 交易管理', () => {
     after(()=>{
         remote.close();
     });
@@ -24,7 +24,7 @@ describe('交易管理', () => {
         }
     });
 
-    it('发送交易：发送交易至指定地址', async () => {
+    it('10.1 发送交易：发送交易至指定地址', async () => {
         let ret = await remote.execute('address.create', []);
         assert(!ret.error);
         env.address = ret.result.address;
@@ -35,18 +35,18 @@ describe('交易管理', () => {
         env.hash = ret.result.hash;
     });
 
-    it('按哈希查询交易：查询指定哈希对应的交易记录', async () => {
+    it('10.2 按哈希查询交易：查询指定哈希对应的交易记录', async () => {
         let ret = await remote.execute('tx.get', [env.hash]);
         assert(!ret.error);
         assert(env.hash == ret.result.hash);
     });
 
-    it('按地址查询交易：查询指定地址下的交易列表', async () => {
+    it('10.3 按地址查询交易：查询指定地址下的交易列表', async () => {
         let ret = await remote.execute('tx.list.address', [env.address]);
         assert(!ret.error);
     });
 
-    it('查询历史交易：查询历史交易列表', async () => {
+    it('10.4 查询历史交易：查询历史交易列表', async () => {
         let ret = await remote.execute('tx.list', [null, 1]);
         assert(!ret.error);
     });

@@ -20,13 +20,19 @@ let env = {
 };
 
 let types = [
+    outputLockType.CHECKABSOLUTEBLOCK,
+    outputLockType.CHECKABSOLUTETIME,
     outputLockType.CHECKRELATIVEBLOCK,
     outputLockType.CHECKRELATIVETIME,
-    outputLockType.CHECKABSOLUTETIME,
-    outputLockType.CHECKABSOLUTEBLOCK,
 ];
 
-describe('锁仓机制 - GIP0027', function() {
+let typeName = {};
+typeName[outputLockType.CHECKABSOLUTEBLOCK] = '3.1 绝对高度';
+typeName[outputLockType.CHECKABSOLUTETIME] = '3.2 绝对时间';
+typeName[outputLockType.CHECKRELATIVEBLOCK] = '3.3 相对高度';
+typeName[outputLockType.CHECKRELATIVETIME] = '3.4 相对时间';
+
+describe('3. 锁仓机制 - GIP0027', function() {
     after(()=>{
         remote.close();
     });
@@ -55,7 +61,7 @@ describe('锁仓机制 - GIP0027', function() {
     });
 
     for(let type of types) {
-        it(`构造[${type}]类型的锁仓交易`, async () => {
+        it(`${typeName[type]} - 构造锁交易`, async () => {
             let sim = env.delay;
             switch(type) {
                 case outputLockType.CHECKRELATIVEBLOCK: {
@@ -92,36 +98,32 @@ describe('锁仓机制 - GIP0027', function() {
                 }],
             ]);
             assert(ret.code == 0);
-        });
-        
-        it('验证: Alice试图花费这笔锁定输出失败', async () => {
-            let ret = await remote.execute('tx.send', [
+
+            ret = await remote.execute('tx.send', [
                 env.bob.address,
                 env.amount - 10000,
                 env.alice.name,
             ]);
             assert(ret.code != 0);
+            console.log('验证: Alice试图花费这笔锁定输出失败');
         });
-    
-        it('查询: Alice查询余额，发现部分额度被锁定', async () => {
-            let ret = await remote.execute('balance.all', [env.alice.name]);
-            assert(ret.result.locked == env.amount);
-        });
-    
-        it('解锁: 通过连续出块来满足锁定输出指定的延迟要求', async () => {
+    }
+
+    it('3.5 解锁交易: 通过连续出块来满足锁定输出指定的延迟要求', async () => {
+        for(let type of types) {
             switch(type) {
                 case outputLockType.CHECKRELATIVEBLOCK: {
                     let ret = await remote.execute('miner.generate.admin', [env.delay]);
                     assert(ret.code == 0);
                     break;
                 }
-
+    
                 case outputLockType.CHECKABSOLUTEBLOCK: {
                     let ret = await remote.execute('miner.generate.admin', [env.delay]);
                     assert(ret.code == 0);
                     break;
                 }
-
+    
                 case outputLockType.CHECKABSOLUTETIME: {
                     await (async (time) => {return new Promise(resolve => {setTimeout(resolve, time);});})(env.delay*3*1000);
                     //为满足中值时间的要求，多挖了几个块
@@ -129,7 +131,7 @@ describe('锁仓机制 - GIP0027', function() {
                     assert(ret.code == 0);
                     break;
                 }
-
+    
                 case outputLockType.CHECKRELATIVETIME: {
                     await (async (time) => {return new Promise(resolve => {setTimeout(resolve, time);});})((1<<consensus.SEQUENCE_GRANULARITY)*1000);
                     //为满足中值时间的要求，多挖了几个块
@@ -138,23 +140,13 @@ describe('锁仓机制 - GIP0027', function() {
                     break;
                 }
             }
-        });
-    
-        it('查询: Alice查询余额，发现相关额度被解锁', async () => {
-            remote.wait(2000);
+        }
 
-            let ret = await remote.execute('balance.all', [env.alice.name]);
-            assert(ret.code == 0);
-            assert(ret.result.locked == 0);
-        });
-    
-        it('验证: Alice试图花费这笔锁定输出成功', async () => {
-            let ret = await remote.execute('tx.send', [
-                env.bob.address,
-                env.amount - 10000,
-                env.alice.name,
-            ]);
-            assert(ret.code == 0);
-        });
-    }
+        remote.wait(2000);
+
+        let ret = await remote.execute('balance.all', [env.alice.name]);
+        assert(ret.code == 0);
+        assert(ret.result.locked == 0);
+        console.log('查询: Alice查询余额，发现相关额度被解锁');
+    });
 });

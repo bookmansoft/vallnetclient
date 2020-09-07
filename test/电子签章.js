@@ -30,7 +30,7 @@ let agreement = {
     body: 'hello world',
 }
 
-describe('电子签章', function() {
+describe('13. 电子签章', function() {
     after(()=>{
         remote.close();
     });
@@ -65,7 +65,7 @@ describe('电子签章', function() {
                     case 'agreement': {
                         assert.strictEqual(true, utils.verifyData(msg.content.payload));
 
-                        console.log(`receive agreement from ${Address.fromWitnessPubkeyhash(digest.hash160(Buffer.from(msg.content.payload.data.pubkey, 'hex')), 'testnet')} to ${msg.to}`);
+                        //console.log(`receive agreement from ${Address.fromWitnessPubkeyhash(digest.hash160(Buffer.from(msg.content.payload.data.pubkey, 'hex')), 'testnet')} to ${msg.to}`);
 
                         let content = digest.sha256(JSON.stringify(msg.content.payload.data)).toString('hex');
                         let ret = await remote.execute('ca.issue', [
@@ -92,45 +92,8 @@ describe('电子签章', function() {
         if(ret[0].height < 100) {
             await remote.execute('miner.generate.admin', [100 - ret[0].height]);
         }
-    });
-    //#endregion
 
-    it('加密算法：使用公钥加密、私钥解密', async () => { 
-        //适用场景: Bob用Alice的公钥加密消息并发送给Alice，只有Alice能解读该消息
-        //依赖条件：Bob必须事先得知Alice的公钥，这通常依赖于CA认证，或者Bob和Alice有点对点通讯的条件
-
-        //使用公钥加密消息，得到加密数据包(包含密文和DH公钥)
-        let packet = HDPrivateKey.eccEncrypt(env.message, env.key.publicKey);
-        //使用私钥解密加密数据包
-        let sim = HDPrivateKey.eccDecrypt(packet, env.key.privateKey);
-        //验证解密正确
-        assert(sim==env.message);
-    });
-
-    it('加密算法：使用私钥签名、公钥验签', async () => { 
-        //适用场景: Alice签名消息并发送给Bob, Bob确认消息是Alice发送的
-        //依赖条件：Bob必须通过CA对Alice的公钥进行认证
-
-        //用私钥计算消息签名
-        let sig = utils.signObj(env.message, env.key.privateKey);
-        //用公钥验证签名的有效性
-        assert(utils.verifyObj(env.message, sig, env.key.publicKey));
-    });
-
-    it('加密算法：使用私钥签名、自验签', async () => {
-        //适用场景: Alice构造签名报文并广播，共识层确认该报文是自洽的(报文中的各项信息能相互验证)
-        //例如，共识层可以确认该报文是由报文内含地址的所有者发出的
-
-        //对数据对象进行签名，返回签名对象：打包了数据对象、公钥、地址和签名
-        let data = env.key.signData({
-            secret: env.message,
-        });
-        //对象自验签: 利用对象中包含的公钥进行校验，确认其中包含的签名、地址的有效性
-        assert.strictEqual(true, utils.verifyData(data));
-    });
-
-    it('Alice生成地址', async () => {
-        let ret = await remote.execute('address.create', [env.alice.name]);
+        ret = await remote.execute('address.create', [env.alice.name]);
         assert(!ret.error);
         env.alice.address = ret.address;
         env.alice.pubkey = ret.publicKey;
@@ -138,10 +101,8 @@ describe('电子签章', function() {
         ret = await remote.execute('key.export.private', [env.alice.address, env.alice.name]);
         assert(!ret.error);
         env.alice.prikey = base58.decode(ret).slice(1, 33);
-    });
 
-    it('Bob生成地址', async () => {
-        let ret = await remote.execute('address.create', [env.bob.name]);
+        ret = await remote.execute('address.create', [env.bob.name]);
         assert(!ret.error);
         env.bob.address = ret.address;
         env.bob.pubkey = ret.publicKey;
@@ -157,8 +118,43 @@ describe('电子签章', function() {
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(1000);
     });
+    //#endregion
 
-    it('个人签发：Bob为Alice签发证书', async () => {
+    // it('加密算法：使用公钥加密、私钥解密', async () => { 
+    //     //适用场景: Bob用Alice的公钥加密消息并发送给Alice，只有Alice能解读该消息
+    //     //依赖条件：Bob必须事先得知Alice的公钥，这通常依赖于CA认证，或者Bob和Alice有点对点通讯的条件
+
+    //     //使用公钥加密消息，得到加密数据包(包含密文和DH公钥)
+    //     let packet = HDPrivateKey.eccEncrypt(env.message, env.key.publicKey);
+    //     //使用私钥解密加密数据包
+    //     let sim = HDPrivateKey.eccDecrypt(packet, env.key.privateKey);
+    //     //验证解密正确
+    //     assert(sim==env.message);
+    // });
+
+    // it('加密算法：使用私钥签名、公钥验签', async () => { 
+    //     //适用场景: Alice签名消息并发送给Bob, Bob确认消息是Alice发送的
+    //     //依赖条件：Bob必须通过CA对Alice的公钥进行认证
+
+    //     //用私钥计算消息签名
+    //     let sig = utils.signObj(env.message, env.key.privateKey);
+    //     //用公钥验证签名的有效性
+    //     assert(utils.verifyObj(env.message, sig, env.key.publicKey));
+    // });
+
+    // it('加密算法：使用私钥签名、自验签', async () => {
+    //     //适用场景: Alice构造签名报文并广播，共识层确认该报文是自洽的(报文中的各项信息能相互验证)
+    //     //例如，共识层可以确认该报文是由报文内含地址的所有者发出的
+
+    //     //对数据对象进行签名，返回签名对象：打包了数据对象、公钥、地址和签名
+    //     let data = env.key.signData({
+    //         secret: env.message,
+    //     });
+    //     //对象自验签: 利用对象中包含的公钥进行校验，确认其中包含的签名、地址的有效性
+    //     assert.strictEqual(true, utils.verifyData(data));
+    // });
+
+    it('13.1 个人签发：Bob为Alice签发证书', async () => {
         let ret = await remote.execute('ca.issue', [
             env.bob.address,            //签发地址
             '',                         //name
@@ -174,26 +170,26 @@ describe('电子签章', function() {
         await remote.wait(1000);
     });
 
-    it('查询证书：根据证书编号查询证书内容', async () => {
+    it('13.2 查询证书：根据证书编号查询证书内容', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.list', [[['erid', erid]]]);
         assert(ret.list[0].erid == erid);
     });
 
-    it('查询列表：查询证书列表', async () => {
+    it('13.3 查询列表：查询证书列表', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.list.me', [[['erid', erid]]]);
         assert(ret.list[0].erid == erid);
     });
 
-    it('验证证书：验证证书的有效性', async () => {
+    it('13.4 验证证书：验证证书的有效性', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.verify', [erid]);
         assert(ret && ret.verify);
         //console.log(ret);
     });
 
-    it('废止证书：Bob废止先前为Alice签发的证书', async () => {
+    it('13.5 废止证书：Bob废止先前为Alice签发的证书', async () => {
         let ret = await remote.execute('ca.abolish', [
             env.bob.address,             //签发地址
             env.alice.erid[0],
@@ -204,37 +200,33 @@ describe('电子签章', function() {
         await remote.wait(500);
     });
 
-    it('查询废止：查询电子证书废止列表', async () => {
+    it('13.6 查询废止：查询电子证书废止列表', async () => {
         let ret = await remote.execute('ca.list.ab', [[['erid', env.alice.erid[0]]]]);
         assert(ret.count == 1);
     });
 
-    it('验证证书：验证证书的有效性', async () => {
+    it('13.7 验证证书：验证证书的有效性', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.verify', [erid]);
         assert(ret && !ret.verify);
     });
 
-    it('机构注册：CPA注册', async () => {
+    it('13.8 机构签发：CPA为Alice签发证书', async () => {
         let ret = await remote.execute('cp.create', [env.cpa.name, '127.0.0.1']);
         assert(!ret.error);
         env.cpa.cid = ret.cid;
         env.cpa.address = ret.addr;
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(500);
-    });
 
-    it('机构注册：CPB注册', async () => {
-        let ret = await remote.execute('cp.create', [env.cpb.name, '127.0.0.1']);
+        ret = await remote.execute('cp.create', [env.cpb.name, '127.0.0.1']);
         assert(!ret.error);
         env.cpb.cid = ret.cid;
         env.cpb.address = ret.addr;
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(500);
-    });
 
-    it('机构签发：CPA为Alice签发证书', async () => {
-        let ret = await remote.execute('ca.issue', [
+        ret = await remote.execute('ca.issue', [
             env.cpa.address,            //签发地址
             '',                         //name
             env.alice.address,          //address
@@ -246,22 +238,17 @@ describe('电子签章', function() {
 
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(500);
-    });
 
-    it('查询证书：根据证书编号查询证书内容', async () => {
         let erid = env.alice.erid[0];
-        let ret = await remote.execute('ca.list', [[['erid', erid]]]);
+        ret = await remote.execute('ca.list', [[['erid', erid]]]);
         assert(ret.list[0].erid == erid);
-    });
 
-    it('验证证书：验证证书的有效性', async () => {
-        let erid = env.alice.erid[0];
-        let ret = await remote.execute('ca.verify', [erid]);
+        erid = env.alice.erid[0];
+        ret = await remote.execute('ca.verify', [erid]);
         assert(ret && ret.verify);
-        //console.log(ret);
     });
 
-    it('机构增信：CPB为CPA增信', async () => {
+    it('13.9 机构增信：CPB为CPA增信', async () => {
         let ret = await remote.execute('ca.enchance', [
             env.cpa.cid,
             env.cpb.cid,
@@ -271,12 +258,12 @@ describe('电子签章', function() {
         await remote.execute('miner.generate.admin', [1]);
     });
 
-    it('查询信用：查询CA信用等级', async () => {
+    it('13.10 查询信用：查询CA信用等级', async () => {
         let ret = await remote.execute('ca.rank', [env.cpa.cid]);
-        console.log(`rank of ${env.cpa.cid}: ${ret}`);
+        //console.log(`rank of ${env.cpa.cid}: ${ret}`);
     });
 
-    it('签署电子合同：Alice和Bob签署电子合同', async () => {
+    it('13.11 签署电子合同：Alice和Bob签署电子合同', async () => {
         //Alice本地签署合同
         const ring = new KeyRing({
             network: 'testnet',
@@ -286,7 +273,7 @@ describe('电子签章', function() {
         env.alice.agreement = ring.signData(agreement);
 
         //Alice向Bob发起合同签署请求
-        console.log(`send agreement to ${env.bob.address}`)
+        //console.log(`send agreement to ${env.bob.address}`)
         await remote.execute('comm.notify', [
             env.bob.address,                                            //通知地址
             {type: 'agreement', payload: env.alice.agreement},          //content
@@ -297,7 +284,7 @@ describe('电子签章', function() {
         assert(env.bob.erid[0]);
     });
 
-    it('验证电子合同：第三方检索验证Alice和Bob签署的电子合同', async () => {
+    it('13.12 验证电子合同：第三方检索验证Alice和Bob签署的电子合同', async () => {
         //检索合同，查看签署人列表并验证签名
         let erid = env.bob.erid[0];
         let ret = await remote.execute('ca.list', [[['erid', erid]]]);

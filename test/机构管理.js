@@ -11,7 +11,7 @@ const remote = (require('./util/connector'))({structured: true});
 
 let cp = {};
 
-describe('机构管理', () => {
+describe('11. 机构管理', () => {
     after(()=>{
         remote.close();
     });
@@ -26,21 +26,21 @@ describe('机构管理', () => {
         await remote.wait(1000);
     });
 
-    it('创建机构：创建一个厂商 - 名称太短', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - 名称太短', async ()=>{
         cp.name = 'abc'; //名称不合法
 
         let ret = await remote.execute('cp.create', [cp.name, '']);
         assert(ret.error);
     });
 
-    it('创建机构：创建一个厂商 - 名称太长', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - 名称太长', async ()=>{
         cp.name = '11111111111111111111111111111111111111111'; //名称不合法
 
         let ret = await remote.execute('cp.create', [cp.name, '']);
         assert(ret.error);
     });
 
-    it('创建机构：创建一个厂商 - 媒体分成太高', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - 媒体分成太高', async ()=>{
         cp.name = uuid();   //修复名称
         cp.grate = 60;      //分成不合法
 
@@ -48,14 +48,14 @@ describe('机构管理', () => {
         assert(ret.error);
     });
 
-    it('创建机构：创建一个厂商 - 媒体分成太低', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - 媒体分成太低', async ()=>{
         cp.grate = -1;      //分成不合法
 
         let ret = await remote.execute('cp.create', [cp.name, `,,,${cp.grate}`]);
         assert(ret.error);
     });
 
-    it('创建机构：创建一个厂商 - URL地址不合法', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - URL地址不合法', async ()=>{
         cp.grate = 15;          //修复分成
         cp.url = '127';         //URL不合法
 
@@ -63,7 +63,7 @@ describe('机构管理', () => {
         assert(ret.error);
     });
 
-    it('创建机构：创建一个厂商 - 分类信息不合法', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - 分类信息不合法', async ()=>{
         cp.url = '127.0.0.1';    //修复URL
         cp.cls = 's';            //分类不合法
 
@@ -71,7 +71,7 @@ describe('机构管理', () => {
         assert(ret.error);
     });
 
-    it('创建机构：创建一个厂商 - 成功', async ()=>{
+    it('11.1 创建机构：创建一个厂商 - 成功', async ()=>{
         cp.cls = 'slg';          //修复分类
 
         let ret = await remote.execute('cp.create', [cp.name, `${cp.url},,${cp.cls},${cp.grate}`]);
@@ -80,7 +80,7 @@ describe('机构管理', () => {
         cp.cid = ret.result.cid; //记录CP编码
     });
 
-    it('查询机构：出块前查询厂商信息 - 失败', async () => {
+    it('11.2 查询机构：出块前查询厂商信息 - 失败', async () => {
         let ret = await remote.execute('cp.query', [[['cid', cp.cid]]]);
         assert(ret.result.list.length == 0);
 
@@ -88,7 +88,7 @@ describe('机构管理', () => {
         assert(ret.result.list.length == 0);
     });
 
-    it('查询机构：出块后查询厂商信息 - 成功', async () => {
+    it('11.2 查询机构：出块后查询厂商信息 - 成功', async () => {
         await remote.execute('miner.generate.admin', [1]);
         await (async function(time){return new Promise(resolve =>{setTimeout(resolve, time);});})(2500); //数据上链有一定的延迟
 
@@ -99,14 +99,14 @@ describe('机构管理', () => {
         assert(rt.result.list.length == 1);
     });
 
-    it('修改机构：修改厂商名称 - 名称非法', async ()=>{
+    it('11.3 修改机构：修改厂商名称 - 名称非法', async ()=>{
         cp.newName = 'ac';
 
         let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(ret.error);
     });
 
-    it('修改机构：修改厂商分成比例 - 失败', async ()=>{
+    it('11.3 修改机构：修改厂商分成比例 - 失败', async ()=>{
         cp.newName = "cp-new-"+uuid().slice(0,29);    //修复名称
         cp.grate = 50;          //分成比例超限
 
@@ -114,7 +114,7 @@ describe('机构管理', () => {
         assert(ret.error);
     });
 
-    it('修改机构：修改厂商分成比例 - 成功', async ()=>{
+    it('11.3 修改机构：修改厂商分成比例 - 成功', async ()=>{
         cp.grate = 49;
 
         let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
@@ -122,7 +122,7 @@ describe('机构管理', () => {
         await remote.execute('miner.generate.admin', [1]);
     });
 
-    it('修改机构：修改厂商分类 - 成功', async ()=>{
+    it('11.3 修改机构：修改厂商分类 - 成功', async ()=>{
         cp.cls = 'rpg';
 
         let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
@@ -130,11 +130,11 @@ describe('机构管理', () => {
         await remote.execute('miner.generate.admin', [1]);
     });
 
-    it('查询机构：查询厂商信息 - 成功', async () => {
-        //数据上链有一定的延迟，因此延迟一段时间后再查询
-        await (async function(time){return new Promise(resolve =>{setTimeout(resolve, time);});})(500); 
+    // it('查询机构：查询厂商信息 - 成功', async () => {
+    //     //数据上链有一定的延迟，因此延迟一段时间后再查询
+    //     await (async function(time){return new Promise(resolve =>{setTimeout(resolve, time);});})(500); 
 
-        let ret = await remote.execute('cp.remoteQuery', [[['name', cp.newName]]]);
-        assert(ret.result.list.length == 1);
-    });
+    //     let ret = await remote.execute('cp.remoteQuery', [[['name', cp.newName]]]);
+    //     assert(ret.result.list.length == 1);
+    // });
 });

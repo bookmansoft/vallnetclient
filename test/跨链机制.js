@@ -8,12 +8,15 @@
  * 5. Alice在A链上收到Bob.Deal交易通知，至此完成了整个业务流程
  */
 
-const assert = require('assert');
-const uuidv1 = require('uuid/v1');
+const assert = require('assert')
+const uuidv1 = require('uuid/v1')
 const connector = require('./util/connector')
-const common = require('./util/common');
+const common = require('./util/common')
+const Indicator = require('./util/Indicator')
 const gamegold = require('gamegold');
 const consensus = gamegold.consensus;
+
+let indicator = Indicator.inst(0);
 
 //连接A链
 const remoteA = connector({
@@ -35,10 +38,10 @@ let net_main = null;
 let env = {
 	alice: {},
   bob: {},
-  transaction: 3, //测试业务笔数
+  transaction: 2, //测试业务笔数
 };
 
-describe('跨链机制 - GIP0028', () => {
+describe('6. 跨链机制 - GIP0028', () => {
   after(()=>{
     //退出节点运行
     net_main.kill('SIGTERM');
@@ -83,7 +86,11 @@ describe('跨链机制 - GIP0028', () => {
 		remoteA.watch(async msg => {
       //收到HTLC请求交易通知
 			if(msg.account == env.bob.name) { //Bob收到了消息
-        if(env.select > 0.33) { //一定概率下，Bob在B链发起HTLC应答交易
+        if(indicator.check(1<<1)) { //一定概率下，Bob在B链发起HTLC应答交易
+          if(!indicator.check(1<<7)) {
+            console.log('6.3 响应请求');
+            indicator.set(1<<7);
+          }
           let ret = await remoteB.execute('htlc.assent', [{
             src: msg.src,
             hash: msg.shash, 
@@ -96,10 +103,12 @@ describe('跨链机制 - GIP0028', () => {
           assert(ret.code == 0);
           
 					await remoteB.execute('miner.generate.admin', [1]);
-          console.log('响应跨链合约(htlc.assent)');
+          //console.log('响应跨链合约(htlc.assent)');
 				}
 			} else { //Alice收到了消息
-				if(env.select <= 0.33) { //一定概率下，Alice在A链发起HTLC请求取消交易
+        if(!indicator.check(1<<1)) { //一定概率下，Alice在A链发起HTLC请求取消交易
+          console.log('6.2 取消请求');
+          indicator.set(1<<1);
           await remoteA.execute('miner.generate.admin', [consensus.HTLC_CANCEL_PERIOD*2]);//满足时延要求
 					let ret = await remoteA.execute('htlc.suggest.cancel', [{
             txid: common.revHex(msg.shash), 
@@ -112,7 +121,7 @@ describe('跨链机制 - GIP0028', () => {
           //数据上链
 					ret = await remoteA.execute('miner.generate.admin', [1]);
           assert(ret.code == 0);
-					console.log('取消合约(htlc.suggest.cancel)');
+					//console.log('取消合约(htlc.suggest.cancel)');
 				}
 			}
 		}, 'htlcsuggest.receive').watch(async msg => {
@@ -120,7 +129,7 @@ describe('跨链机制 - GIP0028', () => {
       if(msg.account == env.alice.name) { //Alice收到了消息
         //合约执行完毕，验证合约状态
         assert(msg.pst, 4);
-        console.log('合约履行完毕(contract finished)');
+        //console.log('合约履行完毕(contract finished)');
 			}
 		}, 'htlcsuggest.deal');
 
@@ -129,7 +138,11 @@ describe('跨链机制 - GIP0028', () => {
 		remoteB.watch(async msg => {
       //收到HTLC应答交易通知
 			if(msg.account == env.alice.name) { //Alice收到了消息
-				if(env.select > 0.66) { //一定概率下，Alice在B链发起提款交易
+        if(indicator.check(1<<2)) { //一定概率下，Alice在B链发起提款交易
+          if(!indicator.check(1<<8)) {
+            console.log('6.5 兑现请求');
+            indicator.set(1<<8);
+          }
 					let ret = await remoteB.execute('htlc.assent.deal', [{
             txid: common.revHex(msg.ahash), 
             index: msg.aidx, 
@@ -138,10 +151,12 @@ describe('跨链机制 - GIP0028', () => {
           assert(ret.code == 0);
           
 					await remoteB.execute('miner.generate.admin', [1]);
-					console.log('兑现响应(htlc.assent.deal)');
+					//console.log('兑现响应(htlc.assent.deal)');
 				}
 			} else { //Bob收到了消息
-				if(env.select <= 0.66) { //一定概率下，Bob在B链发起了应答取消交易
+        if(!indicator.check(1<<2)) { //一定概率下，Bob在B链发起了应答取消交易
+          console.log('6.4 取消响应');
+          indicator.set(1<<2);
 					await remoteB.execute('miner.generate.admin', [consensus.HTLC_CANCEL_PERIOD]);//满足时延要求
 					let ret = await remoteB.execute('htlc.assent.cancel', [{
             txid: common.revHex(msg.ahash), 
@@ -152,12 +167,13 @@ describe('跨链机制 - GIP0028', () => {
           
 					ret = await remoteB.execute('miner.generate.admin', [1]);
 					assert(ret.code == 0);
-					console.log('取消响应(htlc.assent.cancel)');
+					//console.log('取消响应(htlc.assent.cancel)');
 				}
 			}
 		}, 'htlcassent.receive').watch(async msg => {
       //收到HTLC应答提款交易
       if(msg.account == env.bob.name) { //Bob收到了消息
+        console.log('6.6 兑现响应');
         //Bob在A链发起提款交易
 				let ret = await remoteA.execute('htlc.suggest.deal', [{
           txid: common.revHex(msg.shash), 
@@ -165,7 +181,7 @@ describe('跨链机制 - GIP0028', () => {
           sa: msg.secret,
         }, env.bob.name]);
         assert(ret.code == 0);
-        console.log('兑现合约(htlc.suggest.deal)');
+        //console.log('兑现合约(htlc.suggest.deal)');
         
 				ret = await remoteA.execute('miner.generate.admin', [1]);
 				assert(ret.code == 0);
@@ -173,7 +189,9 @@ describe('跨链机制 - GIP0028', () => {
 		}, 'htlcassent.deal');
   });
 
-	it(`发起跨链交易：连续发起${env.transaction}笔跨链交易，并随机不同交易流程如成交/取消`, async () => {
+	it(`连续发起${env.transaction}笔跨链交易，并随机不同交易流程如成交/取消`, async () => {
+    console.log('6.1 发起请求');
+
     for(let i = 0; i < env.transaction; i++) { 
       //在A链上为Alice和Bob充值
       await remoteA.execute('tx.create', [{"sendnow":true}, [{"value":500000000, "account": env.alice.name}]]);
@@ -184,8 +202,6 @@ describe('跨链机制 - GIP0028', () => {
       await remoteB.execute('tx.create', [{"sendnow":true}, [{"value":500000000, "account": env.alice.name}]]);
       await remoteB.execute('tx.create', [{"sendnow":true}, [{"value":500000000, "account": env.bob.name}]]);
       await remoteB.execute('miner.generate.admin', [1]);
-
-      console.log(`[第${i+1}轮]随机业务流程`);
 
       env.select = Math.random(); //每轮重新进行随机设定 
 
@@ -210,7 +226,7 @@ describe('跨链机制 - GIP0028', () => {
         rate: 1,                    //兑换比例
       }, env.alice.name]);
       assert(ret.code == 0);
-      console.log('发布跨链合约(htlc.suggest)');
+      //console.log('发布跨链合约(htlc.suggest)');
       
       //数据上链
       await remoteA.execute('miner.generate.admin', [1]);
@@ -218,9 +234,10 @@ describe('跨链机制 - GIP0028', () => {
     }
   });
 
-  it('查询跨链交易', async () => {
+  it('合约查询', async () => {
+      console.log('6.7 合约查询');
       ret = await remoteA.execute('htlc.query', []);
       assert(ret.code == 0);
-      console.log('合约查询(htlc.query), 现有合约数: ', ret.result.count);
+      //console.log('合约查询(htlc.query), 现有合约数: ', ret.result.count);
     });
 });

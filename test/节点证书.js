@@ -25,7 +25,7 @@ let env = {
 
 const remote = connector();
 
-describe('节点证书', () => {
+describe('7. 节点证书', () => {
     after(()=>{
         remote.close();
     });
@@ -40,7 +40,7 @@ describe('节点证书', () => {
         }
     });
 
-    it('验证证书：获取记账证书前，Alice记账失败', async () => {
+    it('7.1 验证证书：获取记账证书前，Alice记账失败', async () => {
         let ret = await remote.execute('address.create', [env.alice.name]);
         assert(!ret.error);
         env.alice.address = ret.address;
@@ -52,7 +52,7 @@ describe('节点证书', () => {
         assert(!!ret.error);
     });
 
-    it('查询证书：管理员查询记账证书列表', async () => {
+    it('7.2 查询证书：管理员查询记账证书列表', async () => {
         //查询本地节点记账证书列表
         let ret = await remote.execute('prop.query', [[['oid', env.bossOid], ['account', 'default']]]);
         assert(!ret.error);
@@ -64,7 +64,7 @@ describe('节点证书', () => {
         env.miner.address = ret.list[0].current.address;
     });
 
-    it('转让证书：管理员向Alice转让记账证书，然后生成足够区块以切换统计区间', async () => {
+    it('7.3 转让证书：管理员向Alice转让记账证书，然后生成足够区块以切换统计区间', async () => {
         //转让记账证书
         let ret = await remote.execute('prop.send', [env.alice.address, env.miner.pid]);
         assert(!ret.error);
@@ -73,27 +73,27 @@ describe('节点证书', () => {
         await remote.execute('miner.generate.admin', [28]);
     });
 
-    it('查询证书：查询Alice名下的记账证书', async () => {
-        let ret = await remote.execute('prop.query', [[['oid', env.bossOid], ['account', env.alice.name]]]);
-        assert(!ret.error && ret.list[0].pid === env.miner.pid);
-    });
+    // it('查询证书：查询Alice名下的记账证书', async () => {
+    //     let ret = await remote.execute('prop.query', [[['oid', env.bossOid], ['account', env.alice.name]]]);
+    //     assert(!ret.error && ret.list[0].pid === env.miner.pid);
+    // });
 
-    it('验证证书：获取记账证书后，Alice记账成功', async () => {
-        let ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
-        assert(!ret.error);
-        await remote.wait(1000);
-    });
+    // it('验证证书：获取记账证书后，Alice记账成功', async () => {
+    //     let ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
+    //     assert(!ret.error);
+    //     await remote.wait(1000);
+    // });
 
-    it('转让证书：Alice归还记账证书，然后生成足够区块以切换统计区间', async () => {
-        let ret = await remote.execute('prop.send', [env.miner.address, env.miner.pid, env.alice.name]);
-        assert(!ret.error);
+    // it('转让证书：Alice归还记账证书，然后生成足够区块以切换统计区间', async () => {
+    //     let ret = await remote.execute('prop.send', [env.miner.address, env.miner.pid, env.alice.name]);
+    //     assert(!ret.error);
 
-        //确保记账权变化生效
-        await remote.execute('miner.generate.admin', [28]);
-    });
+    //     //确保记账权变化生效
+    //     await remote.execute('miner.generate.admin', [28]);
+    // });
 
-    it('验证证书：失去记账证书后，Alice记账失败', async () => {
-        let ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
-        assert(!!ret.error);
-    });
+    // it('验证证书：失去记账证书后，Alice记账失败', async () => {
+    //     let ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
+    //     assert(!!ret.error);
+    // });
 });

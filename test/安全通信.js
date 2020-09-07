@@ -14,7 +14,7 @@ let env = {
     bob: {name: `Bob-${uuid()}`,},
 };
 
-describe('安全通信', function() {
+describe('16. 安全通信', function() {
     after(()=>{
         remote.close();
     });
@@ -36,7 +36,7 @@ describe('安全通信', function() {
             //     to:      'address msg sent to',
             //     content: 'msg' 
             // }
-            console.log('get screet:', msg);
+            //console.log('get screet:', msg);
             if(msg.to == env.bob.address) {
                 //如果Bob收到了消息，自动回复消息给Alice
                 await remote.execute('comm.secret', [
@@ -46,10 +46,8 @@ describe('安全通信', function() {
                 ]);
             }
  		}, 'notify.secret');
-    });
 
-    it('创建地址：Alice和Bob各自储备通信所需通证', async () => {
-        let ret = await remote.execute('address.create', [env.bob.name]);
+        ret = await remote.execute('address.create', [env.bob.name]);
         assert(ret.code == 0);
         env.bob.address = ret.result.address;
 
@@ -59,15 +57,13 @@ describe('安全通信', function() {
         }
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(500);
-    });
 
-    it('创建地址：Bob生成会话地址并展示给Alice', async () => {
-        let ret = await remote.execute('address.create', [env.bob.name]);
+        ret = await remote.execute('address.create', [env.bob.name]);
         assert(ret.code == 0);
         env.bob.address = ret.result.address;
-    });
+     });
 
-    it('建立安全信道：Alice使用Bob展示的会话地址，和Bob进行通讯握手', async () => {
+    it('16.1 建立安全信道：Alice使用Bob展示的会话地址，和Bob进行通讯握手', async () => {
         //通讯握手，消息内容可设置为空
         await remote.execute('comm.secret', [
             env.bob.address,
@@ -77,7 +73,7 @@ describe('安全通信', function() {
         await remote.wait(500);
     });
 
-    it('发送安全消息：Alice发送消息给Bob', async () => {
+    it('16.2 发送安全消息：Alice发送消息给Bob', async () => {
         await remote.execute('comm.secret', [
             env.bob.address,
             `哦！${env.bob.name}`,
