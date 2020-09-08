@@ -154,7 +154,7 @@ describe('13. 电子签章', function() {
     //     assert.strictEqual(true, utils.verifyData(data));
     // });
 
-    it('13.1 个人签发：Bob为Alice签发证书', async () => {
+    it('13.1 个人签发', async () => {
         let ret = await remote.execute('ca.issue', [
             env.bob.address,            //签发地址
             '',                         //name
@@ -165,53 +165,59 @@ describe('13. 电子签章', function() {
         ]);
         assert(ret.erid);
         env.alice.erid.unshift(ret.erid);
+        console.log(`提交被签发人公钥、签发人账户和地址，向被签发人签发证书，返回码: ${ret.error?-1:0}，证书编号: ${ret.erid}`);
 
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(1000);
     });
 
-    it('13.2 查询证书：根据证书编号查询证书内容', async () => {
+    it('13.2 查询证书', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.list', [[['erid', erid]]]);
         assert(ret.list[0].erid == erid);
+        console.log(`根据证书编号查询证书内容，返回码: ${ret.error?-1:0}`);
     });
 
-    it('13.3 查询列表：查询证书列表', async () => {
+    it('13.3 查询列表', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.list.me', [[['erid', erid]]]);
         assert(ret.list[0].erid == erid);
+        console.log(`查询证书列表，返回码: ${ret.error?-1:0}`);
     });
 
     it('13.4 验证证书：验证证书的有效性', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.verify', [erid]);
         assert(ret && ret.verify);
-        //console.log(ret);
+        console.log(`提交证书编号，验证证书的有效性，返回码: ${ret.error?-1:0}, 验证结果: ${ret.verify}`);
     });
 
-    it('13.5 废止证书：Bob废止先前为Alice签发的证书', async () => {
+    it('13.5 废止证书', async () => {
         let ret = await remote.execute('ca.abolish', [
             env.bob.address,             //签发地址
             env.alice.erid[0],
         ]);
         assert(!ret.error);
+        console.log(`个人用户废止先前签发的证书，返回码: ${ret.error?-1:0}`);
 
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(500);
     });
 
-    it('13.6 查询废止：查询电子证书废止列表', async () => {
+    it('13.6 查询废止', async () => {
         let ret = await remote.execute('ca.list.ab', [[['erid', env.alice.erid[0]]]]);
         assert(ret.count == 1);
+        console.log(`查询电子证书废止列表，返回码: ${ret.error?-1:0}`);
     });
 
-    it('13.7 验证证书：验证证书的有效性', async () => {
+    it('13.7 验证证书', async () => {
         let erid = env.alice.erid[0];
         let ret = await remote.execute('ca.verify', [erid]);
         assert(ret && !ret.verify);
+        console.log(`提交证书编号，验证证书的有效性，返回码: ${ret.error?-1:0}, 验证结果: ${ret.verify}`);
     });
 
-    it('13.8 机构签发：CPA为Alice签发证书', async () => {
+    it('13.8 机构签发', async () => {
         let ret = await remote.execute('cp.create', [env.cpa.name, '127.0.0.1']);
         assert(!ret.error);
         env.cpa.cid = ret.cid;
@@ -234,6 +240,7 @@ describe('13. 电子签章', function() {
             0,                          //有效期，填0表示使用默认值
         ]);
         assert(ret.erid);
+        console.log(`机构为个人用户签发证书，返回码: ${ret.error?-1:0}, 证书编号: ${ret.erid}`);
         env.alice.erid.unshift(ret.erid);
 
         await remote.execute('miner.generate.admin', [1]);
@@ -248,22 +255,25 @@ describe('13. 电子签章', function() {
         assert(ret && ret.verify);
     });
 
-    it('13.9 机构增信：CPB为CPA增信', async () => {
+    it('13.9 机构增信', async () => {
         let ret = await remote.execute('ca.enchance', [
             env.cpa.cid,
             env.cpb.cid,
         ]);
         assert(!ret.error);
+        console.log(`提交增信机构和被增信机构编号，为其他机构增信，返回码: ${ret.error?-1:0}`);
+
         //确保数据上链
         await remote.execute('miner.generate.admin', [1]);
     });
 
-    it('13.10 查询信用：查询CA信用等级', async () => {
+    it('13.10 查询信用', async () => {
         let ret = await remote.execute('ca.rank', [env.cpa.cid]);
+        console.log(`查询指定机构(${env.cpa.cid})信用等级，返回码: ${ret.error?-1:0}, 信用等级: ${ret}`);
         //console.log(`rank of ${env.cpa.cid}: ${ret}`);
     });
 
-    it('13.11 签署电子合同：Alice和Bob签署电子合同', async () => {
+    it('13.11 签署电子合同', async () => {
         //Alice本地签署合同
         const ring = new KeyRing({
             network: 'testnet',
@@ -274,7 +284,7 @@ describe('13. 电子签章', function() {
 
         //Alice向Bob发起合同签署请求
         //console.log(`send agreement to ${env.bob.address}`)
-        await remote.execute('comm.notify', [
+        let ret = await remote.execute('comm.notify', [
             env.bob.address,                                            //通知地址
             {type: 'agreement', payload: env.alice.agreement},          //content
             env.alice.name,                                             //发送账号
@@ -282,9 +292,10 @@ describe('13. 电子签章', function() {
         await remote.wait(2000);
 
         assert(env.bob.erid[0]);
+        console.log(`个人用户间签署电子合同，返回码: ${ret.error?-1:0}, 合同编号: ${env.bob.erid[0]}`);
     });
 
-    it('13.12 验证电子合同：第三方检索验证Alice和Bob签署的电子合同', async () => {
+    it('13.12 验证电子合同', async () => {
         //检索合同，查看签署人列表并验证签名
         let erid = env.bob.erid[0];
         let ret = await remote.execute('ca.list', [[['erid', erid]]]);
@@ -318,5 +329,6 @@ describe('13. 电子签章', function() {
         //第三方验证证明(链上合同)是自洽的
         ret = await remote.execute('ca.verify', [erid]);
         assert(ret && ret.verify);
+        console.log(`第三方检索验证已签署电子合同，返回码: ${ret.error?-1:0}, 验证结果: ${ret.verify}`);
     });
 });

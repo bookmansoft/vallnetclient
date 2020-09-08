@@ -43,27 +43,30 @@ describe('8. 节点选举', () => {
     });
 
     for(let i = 0; i < 1; i++) {
-        it('8.1 验证选举：投票前，Alice记账失败', async () => {
+        it('8.1 验证选举', async () => {
             let ret = await remote.execute('address.create', [env.alice.name]);
             assert(!ret.error);
             env.alice.address = ret.address;
 
             ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
             assert(!!ret.error);
+            console.log(`投票前，提交未当选账号(${env.alice.name})执行记账，返回码: ${ret.error?-1:0}`);
         });
 
-        it('8.2 投票选举：为Alice记账权投票，然后生成足够区块以切换统计区间', async () => {
+        it('8.2 投票选举', async () => {
             let ret = await remote.execute('vote.send', [env.alice.address, 100000000]);
             assert(!ret.error);
+            console.log(`提交账号名称${env.alice.name}、投票数，为其记账权进行投票，返回码: ${ret.error?-1:0}`);
 
             //确保记账权变化生效
             await remote.execute('miner.generate.admin', [consensus.BLOCK_2WEEK]); // 过大或过小都会导致统计周期意外切换，从而影响投票权的有效性
         });
 
-        it('8.3 查询选举：查询Alice当前选举权', async () => {
+        it('8.3 查询选举', async () => {
             let ret = await remote.execute('vote.check', [env.alice.address]);
             assert(!ret.error);
             assert(ret.vote > 0);
+            console.log(`提交账号名称(${env.alice.name})查询其当前选举权，返回码: ${ret.error?-1:0}`);
 
             //验证选举权：投票后，Alice记账成功
             ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);

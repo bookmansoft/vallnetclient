@@ -58,12 +58,13 @@ describe('4. 钱包管理', () => {
         env.address = ret.id;
     });
 
-    it('4.1 创建钱包：在钱包管理器中创建一个新钱包', async () => {
+    it('4.1 创建钱包', async () => {
         //创建新钱包
         let msg = await remote.execute('wallet.create', [null, 'pubkeyhash', 1, 1]);
         env.robin.key = msg.account.accountKey;
         env.robin.address = msg.account.receiveAddress;
         env.robin.id = msg.id;
+        console.log(`在钱包管理器中创建一个新钱包, 返回码: ${msg.error?-1:0}, 钱包编号: ${msg.id}`);
 
         //连接新钱包，查询余额
         remote.setup({type: 'testnet', id: env.robin.id});
@@ -87,21 +88,24 @@ describe('4. 钱包管理', () => {
         remote.setup({type: 'testnet', id: 'primary'});
     });
 
-    it('4.2 列表钱包：列表钱包管理器中的所有钱包', async () => {
+    it('4.2 列表钱包', async () => {
         let msg = await remote.execute('wallet.list', []);
         assert(msg.indexOf('primary') >= 0);
         assert(msg.indexOf(env.robin.id) >= 0);
+        console.log(`查询钱包管理器中的所有钱包, 返回码: ${msg.error?-1:0}, 钱包编号列表: ${msg}`);
     });
 
-    it('4.3 查询钱包：查询钱包概要说明', async () => {
+    it('4.3 查询钱包', async () => {
         let msg = await remote.execute('wallet.info', [env.robin.id]);
         assert(!msg.error && msg.id == env.robin.id);
+        console.log(`提交一个钱包编号${env.robin.id}, 查询钱包信息, 返回码: ${msg.error?-1:0}`);
     });
 
-    it('4.4 备份密钥：用助记词模式导出钱包密钥作为备份', async () => {
+    it('4.4 备份密钥', async () => {
         //如下指令会在项目根目录下，导出名为'testnet-wallet.encrypt'的文件，其中'testnet'为网络类型
         let msg = await remote.execute('wallet.exportmnemonic', ['bookmansoft']);
         assert(!msg.error);
+        console.log(`用助记词模式导出钱包密钥作为备份, 返回码: ${msg.error?-1:0}`);
 
         //可遵循如下步骤，使用导出的助记词备份来恢复钱包
         //1. 新建项目并完成节点初始化启动，也可以利用现有项目
@@ -110,14 +114,16 @@ describe('4. 钱包管理', () => {
         //4. 启动节点，注意启动时不要带'--genesis'参数，因为该参数指示重建创世区块，并为创世者设置专用钱包库
     });
 
-    it('4.5 导出备份：从钱包管理器中导出钱包备份', async () => {
+    it('4.5 导出备份', async () => {
         let msg = await remote.execute('wallet.export', ['backup.txt']);
         assert(!msg.error && msg == true);
+        console.log(`从钱包管理器中导出钱包备份, 返回码: ${msg.error?-1:0}`);
     });
 
-    it('4.6 导入备份：将钱包备份导入钱包管理器', async () => {
+    it('4.6 导入备份', async () => {
         let msg = await remote.execute('wallet.import', ['backup.txt']);
         assert(!msg.error && msg == true);
+        console.log(`将钱包备份导入钱包管理器, 返回码: ${msg.error?-1:0}`);
     });
 
     // it('根据输入地址，导出私钥', async () => {

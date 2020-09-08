@@ -51,6 +51,7 @@ describe('12. 多签合约 - 利用托管合约实现多签合约流程', () => 
         assert(msg.account.accountKey);
         env.address[env.bob] = msg.id;
         env.accountKey[env.bob] = msg.account.accountKey;
+        console.log(`提交账户名，为其创建一个专属多签钱包，返回码: ${msg.error?-1:0}`);
 
         //转账交易：为Alice和Bob储值
         await remote.execute('tx.send', [env.address[env.alice], 200000000]);
@@ -63,17 +64,20 @@ describe('12. 多签合约 - 利用托管合约实现多签合约流程', () => 
         await remote.wait(1000);
     });
 
-    it('12.2 创建多签合约：Alice建立一个多签合约实例', async () => {
+    it('12.2 创建多签合约', async () => {
         //注册合约
         let msg = await remote.execute('sc.register', [{'type':'multisig', 'm':2, 'n':2}], env.alice);
         assert(msg.dst);
+        console.log(`提交账户名，为其创建一个多签合约，返回码: ${msg.error?-1:0}`);
+
         //设置合约地址
         env.address['contract'] = msg.dst;
+
         //上链
         await remote.execute('miner.generate.admin', [1]);
     });
 
-    it('12.3 共建多签合约：多方分别上传自己的公钥', async () =>{
+    it('12.3 共建多签合约', async () =>{
         //Alice构造合约驱动交易，上传钱包公钥和通信地址
         await remote.execute('sc.run', [
             `${env.address['contract']},50000`,
@@ -100,13 +104,14 @@ describe('12. 多签合约 - 利用托管合约实现多签合约流程', () => 
         let msg = await remote.execute('sc.query', [[['options.type','multisig'],['options.dst',env.address['contract']]]]);
         assert(msg.list[0].options.puba);
         env.address['multisig'] = msg.list[0].options.puba;
+        console.log(`多方分别上传自己的公钥, 共建多签合约，返回码: ${msg.error?-1:0}, 合约地址: ${msg.list[0].options.puba}`)
 
         //第三方向多签地址转账，Alice和Bob的多签钱包将收到对应UTXO
         await remote.execute('tx.send', [env.address['multisig'], 250000000]);
         await remote.execute('miner.generate.admin', [1]);
     });
 
-    it('12.4 主动运行多签合约：Alice动用多签钱包向Robin转账', async () => {
+    it('12.4 主动运行多签合约', async () => {
         //Alice动用多签钱包，构造一笔向Robin转账的多签交易
         //2020.08.05 注意此处暴露了一个严重的安全问题：缺乏钱包访问控制机制，用户被授权连接后，可任意指定待操控钱包
         //一种简便易行的方案: 限定用户创建钱包时，只能使用自己名下的地址作为索引，在访问特定钱包时添加地址归属检测
@@ -123,11 +128,12 @@ describe('12. 多签合约 - 利用托管合约实现多签合约流程', () => 
 
         //Alice动用普通钱包发送合约驱动交易，征集门限签名
         remote.setup({type: 'testnet', id: 'primary'});
-        await remote.execute('sc.run', [
+        msg = await remote.execute('sc.run', [
             `${env.address['contract']},20000`,
             {'oper':'sign','tx':env.trans,'addr':env.address[env.alice]},
             env.alice,
         ]);
+        console.log(`主动运行多签合约，以发起征集门限签名合约，返回码: ${msg.error?-1:0}`)
 
         //此时由于未达门限要求，Robin尚未收到转账
         msg = await remote.execute('balance.all', [env.robin]);
@@ -138,12 +144,13 @@ describe('12. 多签合约 - 利用托管合约实现多签合约流程', () => 
         await remote.wait(1000);
     });
 
-    it('12.5 辅助运行多签合约：多方分别查询多签交易列表，动用多签钱包逐项补签后广播，Robin收到款项', async () => {
+    it('12.5 辅助运行多签合约', async () => {
         //todo 需要进一步用访问账号限定 tx.mstrans 返回的交易条目
         let msg = await remote.execute('tx.mstrans', [env.bob]);
         for(let trans of msg) {
             //tx.mstrans.sign 指令同时用到了多签钱包和普通钱包账户，需要检测多签钱包的归属
-            await remote.execute('tx.mstrans.sign', [trans.txid, env.bob]);
+            let ret = await remote.execute('tx.mstrans.sign', [trans.txid, env.bob]);
+            console.log(`多方分别查询多签交易列表，动用多签钱包逐项补签后广播, 返回码: ${(ret&&ret.error)?-1:0}`);
         }
 
         await remote.execute('miner.generate.admin', [1]);

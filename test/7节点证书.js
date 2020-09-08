@@ -40,7 +40,7 @@ describe('7. 节点证书', () => {
         }
     });
 
-    it('7.1 验证证书：获取记账证书前，Alice记账失败', async () => {
+    it('7.1 验证证书', async () => {
         let ret = await remote.execute('address.create', [env.alice.name]);
         assert(!ret.error);
         env.alice.address = ret.address;
@@ -48,14 +48,17 @@ describe('7. 节点证书', () => {
         await remote.execute('tx.send', [env.alice.address, 500000000]);
         assert(!ret.error);
 
+        //获取记账证书前，Alice记账失败
         ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
         assert(!!ret.error);
+        console.log(`提交无证书的账号进行记账，返回码: ${ret.error?-1:0}`);
     });
 
-    it('7.2 查询证书：管理员查询记账证书列表', async () => {
+    it('7.2 查询证书', async () => {
         //查询本地节点记账证书列表
         let ret = await remote.execute('prop.query', [[['oid', env.bossOid], ['account', 'default']]]);
         assert(!ret.error);
+        console.log(`提交账户名(default)查询其名下记账证书, 返回码: ${ret.error?-1:0}`);
         
         // 如果存在多于一个的记账证书, 则取第一个登记在env.miner名下.
         assert(ret.list.length > 0 && ret.list[0].cid == env.bossCid)
@@ -64,12 +67,13 @@ describe('7. 节点证书', () => {
         env.miner.address = ret.list[0].current.address;
     });
 
-    it('7.3 转让证书：管理员向Alice转让记账证书，然后生成足够区块以切换统计区间', async () => {
+    it('7.3 转让证书', async () => {
         //转让记账证书
         let ret = await remote.execute('prop.send', [env.alice.address, env.miner.pid]);
         assert(!ret.error);
+        console.log(`提交用户地址、证书编号，向其转让证书，返回码: ${ret.error?-1:0}`);
 
-        //生成足够区块，确保证书转移生效
+        //生成足够区块以切换统计区间，确保证书转移生效
         await remote.execute('miner.generate.admin', [28]);
     });
 

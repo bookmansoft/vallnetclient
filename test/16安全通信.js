@@ -63,22 +63,25 @@ describe('16. 安全通信', function() {
         env.bob.address = ret.result.address;
      });
 
-    it('16.1 建立安全信道：Alice使用Bob展示的会话地址，和Bob进行通讯握手', async () => {
-        //通讯握手，消息内容可设置为空
-        await remote.execute('comm.secret', [
+    it('16.1 建立安全信道', async () => {
+        //Alice使用Bob展示的会话地址，和Bob进行通讯握手，消息内容可设置为空
+        let ret = await remote.execute('comm.secret', [
             env.bob.address,
             '',
             env.alice.name,
         ]);
+        console.log(`用户A发起建立一个AB间的安全信道，返回码: ${ret.error?-1:0}`);
+        
         await remote.wait(500);
     });
 
-    it('16.2 发送安全消息：Alice发送消息给Bob', async () => {
-        await remote.execute('comm.secret', [
+    it('16.2 发送安全消息', async () => {
+        let ret = await remote.execute('comm.secret', [
             env.bob.address,
             `哦！${env.bob.name}`,
             env.alice.name,
         ]);
         await remote.wait(500);
+        console.log(`用户A通过AB间的安全信道向B发送消息，返回码: ${ret.error?-1:0}`);
     });
 });

@@ -24,7 +24,7 @@ describe('10. 交易管理', () => {
         }
     });
 
-    it('10.1 发送交易：发送交易至指定地址', async () => {
+    it('10.1 发送交易', async () => {
         let ret = await remote.execute('address.create', []);
         assert(!ret.error);
         env.address = ret.result.address;
@@ -33,21 +33,25 @@ describe('10. 交易管理', () => {
         ret = await remote.execute('tx.send', [env.address, env.amount]);
         assert(!ret.error);
         env.hash = ret.result.hash;
+        console.log(`提交地址和金额，发送交易至指定地址，返回码: ${ret.error?-1:0}`);
     });
 
-    it('10.2 按哈希查询交易：查询指定哈希对应的交易记录', async () => {
+    it('10.2 按哈希查询交易', async () => {
         let ret = await remote.execute('tx.get', [env.hash]);
         assert(!ret.error);
         assert(env.hash == ret.result.hash);
+        console.log(`查询指定哈希对应的交易记录，返回码: ${ret.error?-1:0}`);
     });
 
-    it('10.3 按地址查询交易：查询指定地址下的交易列表', async () => {
+    it('10.3 按地址查询交易', async () => {
         let ret = await remote.execute('tx.list.address', [env.address]);
         assert(!ret.error);
+        console.log(`查询指定地址下的交易列表，返回码: ${ret.error?-1:0}`);
     });
 
-    it('10.4 查询历史交易：查询历史交易列表', async () => {
+    it('10.4 查询历史交易', async () => {
         let ret = await remote.execute('tx.list', [null, 1]);
         assert(!ret.error);
+        console.log(`查询历史交易列表，返回码: ${ret.error?-1:0}`);
     });
 });

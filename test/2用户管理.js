@@ -57,7 +57,7 @@ describe('2. 用户管理', () => {
         await remote.execute('sys.devmode', [true]);
     });
 
-    it('2.1 分配令牌：超级用户为普通用户映射账户并分配令牌', async () => {
+    it('2.1 分配令牌', async () => {
         //超级用户执行指令，为普通用户分配令牌
         let ret = await remote.execute('sys.createAuthToken', [env.account]);
 
@@ -71,9 +71,10 @@ describe('2. 用户管理', () => {
             cid: env.account, 
             token: env.opToken
         });
+        console.log(`提交一个账户名称(${env.account})，为其分配令牌，返回码: ${ret.code}, 令牌: ${env.opToken}`);
     });
 
-    it('2.2 添加成员：超级用户将指定用户加入指定角色的成员列表', async () => {
+    it('2.2 添加成员', async () => {
         //添加前：普通用户执行受限指令 - 失败
         let ret = await remoteOperator.execute('address.create', []);
         assert(ret.error);
@@ -81,6 +82,7 @@ describe('2. 用户管理', () => {
         //超级用户将普通用户加入'address'前缀分组
         ret = await remote.execute('sys.groupPrefix', [[['address', env.account]]]);
         assert(!ret.error);
+        console.log(`提交一个账户名称(${env.account})，将其加入'address'分组，返回码: ${ret.code}`);
 
         //添加后：普通用户执行受限指令 - 成功
         ret = await remoteOperator.execute('address.create', []);
@@ -91,20 +93,23 @@ describe('2. 用户管理', () => {
         //超级用户将普通用户从'address'前缀分组移除
         let ret = await remote.execute('sys.groupPrefix', [[['address', env.account]], true]);
         assert(!ret.error);
+        console.log(`提交一个账户名称(${env.account})，将其从'address'分组中移除，返回码: ${ret.code}`);
 
         //移除后：普通用户执行受限指令 - 失败
         ret = await remoteOperator.execute('address.create', []);
         assert(ret.error);
     });
 
-    it('2.4 初始化：在节点重启事件处理句柄中，从业务中台导入权限初始设定', async () => {
+    it('2.4 初始化', async () => {
         //订阅并监控主网重启事件
         await monitor.setmode(monitor.CommMode.ws).watch(async function(msg) {
             //当捕获到重启事件时，重新设定ACL
             //console.log('Info: Got event chain/full, Try to reset ACL...');
 
+            //从业务中台导入权限初始设定
             let ret = await remote.execute('sys.groupPrefix', [[['address', env.account]]]);
             assert(!ret.error);
+            console.log(`将权限设置为初始设定，返回码: ${ret.code}`);
 
             //console.log('Info: Finished Reset ACL.');
         }, 'chain/full').execute('subscribe', ['chain/full']);
@@ -115,10 +120,11 @@ describe('2. 用户管理', () => {
         await remote.wait(200);
     });
 
-    it('2.5 用户转账：超级用户为普通用户转账', async () => {
+    it('2.5 用户转账', async () => {
         //转账前：账户余额等于零
-        let ret = await remoteOperator.execute('balance.all', []);
+        let ret = await remoteOperator.execute('balance.all', [env.account]);
         assert(!ret.error && ret.result.confirmed == 0);
+        console.log(`账户${env.account}转账前余额: ${ret.result.confirmed}`);
 
         //超级用户向普通用户转账
         await remote.execute('tx.create', [{"sendnow":true}, [{"value":env.amount, "account": env.account}]]);
@@ -132,5 +138,8 @@ describe('2. 用户管理', () => {
         //转账后：超级用户校验账户余额
         ret = await remote.execute('balance.all', [env.account]);
         assert(!ret.error && ret.result.confirmed == env.amount);
+
+        console.log(`提交一个账户名称${env.account}为其转账${env.amount}，返回码: ${ret.code}`);
+        console.log(`账户${env.account}转账后余额: ${ret.result.confirmed}`);
     });
 });

@@ -26,99 +26,90 @@ describe('11. 机构管理', () => {
         await remote.wait(1000);
     });
 
-    it('11.1 创建机构：创建一个厂商 - 名称太短', async ()=>{
-        cp.name = 'abc'; //名称不合法
+    it('11.1 创建机构', async ()=>{
+        //名称太短
+        cp.name = 'abc'; 
 
         let ret = await remote.execute('cp.create', [cp.name, '']);
         assert(ret.error);
-    });
 
-    it('11.1 创建机构：创建一个厂商 - 名称太长', async ()=>{
+        //名称太长
         cp.name = '11111111111111111111111111111111111111111'; //名称不合法
 
-        let ret = await remote.execute('cp.create', [cp.name, '']);
+        ret = await remote.execute('cp.create', [cp.name, '']);
         assert(ret.error);
-    });
 
-    it('11.1 创建机构：创建一个厂商 - 媒体分成太高', async ()=>{
         cp.name = uuid();   //修复名称
-        cp.grate = 60;      //分成不合法
+        cp.grate = 60;      //媒体分成太高
 
-        let ret = await remote.execute('cp.create', [cp.name, `,,,${cp.grate}`]);
+        ret = await remote.execute('cp.create', [cp.name, `,,,${cp.grate}`]);
         assert(ret.error);
-    });
 
-    it('11.1 创建机构：创建一个厂商 - 媒体分成太低', async ()=>{
         cp.grate = -1;      //分成不合法
 
-        let ret = await remote.execute('cp.create', [cp.name, `,,,${cp.grate}`]);
+        ret = await remote.execute('cp.create', [cp.name, `,,,${cp.grate}`]);
         assert(ret.error);
-    });
 
-    it('11.1 创建机构：创建一个厂商 - URL地址不合法', async ()=>{
         cp.grate = 15;          //修复分成
         cp.url = '127';         //URL不合法
 
-        let ret = await remote.execute('cp.create', [cp.name, `${cp.url},,,${cp.grate}`]);
+        ret = await remote.execute('cp.create', [cp.name, `${cp.url},,,${cp.grate}`]);
         assert(ret.error);
-    });
 
-    it('11.1 创建机构：创建一个厂商 - 分类信息不合法', async ()=>{
         cp.url = '127.0.0.1';    //修复URL
         cp.cls = 's';            //分类不合法
 
-        let ret = await remote.execute('cp.create', [cp.name, `${cp.url},,${cp.cls},${cp.grate}}`]);
+        ret = await remote.execute('cp.create', [cp.name, `${cp.url},,${cp.cls},${cp.grate}}`]);
         assert(ret.error);
-    });
 
-    it('11.1 创建机构：创建一个厂商 - 成功', async ()=>{
         cp.cls = 'slg';          //修复分类
 
-        let ret = await remote.execute('cp.create', [cp.name, `${cp.url},,${cp.cls},${cp.grate}`]);
+        ret = await remote.execute('cp.create', [cp.name, `${cp.url},,${cp.cls},${cp.grate}`]);
         assert(!ret.error);
+        console.log(`提交机构名称、IP地址，创建一个机构，返回码: ${ret.error?-1:0}`);
 
         cp.cid = ret.result.cid; //记录CP编码
     });
 
-    it('11.2 查询机构：出块前查询厂商信息 - 失败', async () => {
+    it('11.2 查询机构', async () => {
+        //查询机构：出块前查询厂商信息 - 失败
         let ret = await remote.execute('cp.query', [[['cid', cp.cid]]]);
         assert(ret.result.list.length == 0);
 
         ret = await remote.execute('cp.remoteQuery', [[['cid', cp.cid]]]);
         assert(ret.result.list.length == 0);
-    });
 
-    it('11.2 查询机构：出块后查询厂商信息 - 成功', async () => {
         await remote.execute('miner.generate.admin', [1]);
         await (async function(time){return new Promise(resolve =>{setTimeout(resolve, time);});})(2500); //数据上链有一定的延迟
 
-        let ret = await remote.execute('cp.query', [[['cid', cp.cid]]]);
+        ret = await remote.execute('cp.query', [[['cid', cp.cid]]]);
         assert(ret.result.list.length == 1);
+        console.log(`根据机构编号查询机构信息，返回码: ${ret.result.code}`);
 
         rt = await remote.execute('cp.remoteQuery', [[['cid', cp.cid]]]);
         assert(rt.result.list.length == 1);
     });
 
-    it('11.3 修改机构：修改厂商名称 - 名称非法', async ()=>{
+    it('11.3 修改机构：修改厂商分成比例 - 成功', async ()=>{
+        //修改机构：修改厂商名称 - 名称非法
         cp.newName = 'ac';
 
         let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(ret.error);
-    });
 
-    it('11.3 修改机构：修改厂商分成比例 - 失败', async ()=>{
+        //修改机构：修改厂商分成比例 - 失败
         cp.newName = "cp-new-"+uuid().slice(0,29);    //修复名称
         cp.grate = 50;          //分成比例超限
 
-        let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
+        ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(ret.error);
-    });
 
-    it('11.3 修改机构：修改厂商分成比例 - 成功', async ()=>{
+        //修复分成比例
         cp.grate = 49;
 
-        let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
+        ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(!ret.error);
+        console.log(`修改机构已登记信息，返回码: ${ret.result.code}`);
         await remote.execute('miner.generate.admin', [1]);
     });
 
