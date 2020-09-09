@@ -36,14 +36,15 @@ describe('16. 安全通信', function() {
             //     to:      'address msg sent to',
             //     content: 'msg' 
             // }
-            //console.log('get screet:', msg);
             if(msg.to == env.bob.address) {
+                await remote.wait(1000);
+                console.log(`事件监听: 用户B${env.bob.name}收到了用户A${env.alice.name}发送的消息`, msg);
                 //如果Bob收到了消息，自动回复消息给Alice
-                await remote.execute('comm.secret', [
-                    msg.from,
-                    `耶！${env.alice.name}`,
-                    env.bob.name,
-                ]);
+                // await remote.execute('comm.secret', [
+                //     msg.from,
+                //     `耶！${env.alice.name}`,
+                //     env.bob.name,
+                // ]);
             }
  		}, 'notify.secret');
 
@@ -61,7 +62,15 @@ describe('16. 安全通信', function() {
         ret = await remote.execute('address.create', [env.bob.name]);
         assert(ret.code == 0);
         env.bob.address = ret.result.address;
-     });
+        env.message = `哦！${env.bob.name}`;
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 账户A名称: ${env.alice.name}`);
+        console.log(`- 账户B名称: ${env.bob.name}`);
+        console.log(`- 账户B地址: ${env.bob.address}`);
+        console.log(`- 消息内容: ${env.message}`);
+        console.log(`[模拟输入数据结束]`);
+    });
 
     it('16.1 建立安全信道', async () => {
         //Alice使用Bob展示的会话地址，和Bob进行通讯握手，消息内容可设置为空
@@ -70,7 +79,7 @@ describe('16. 安全通信', function() {
             '',
             env.alice.name,
         ]);
-        console.log(`用户A发起建立一个AB间的安全信道，返回码: ${ret.error?-1:0}`);
+        console.log(`用户A${env.alice.name}发起建立一个AB间的安全信道(提交用户B地址${env.bob.address})，返回码: ${ret.error?-1:0}`);
         
         await remote.wait(500);
     });
@@ -78,10 +87,10 @@ describe('16. 安全通信', function() {
     it('16.2 发送安全消息', async () => {
         let ret = await remote.execute('comm.secret', [
             env.bob.address,
-            `哦！${env.bob.name}`,
+            env.message,
             env.alice.name,
         ]);
-        await remote.wait(500);
-        console.log(`用户A通过AB间的安全信道向B发送消息，返回码: ${ret.error?-1:0}`);
+        console.log(`用户A${env.alice.name}通过AB间的安全信道向用户B${env.bob.name}发送消息，返回码: ${ret.error?-1:0}`);
+        await remote.wait(1000);
     });
 });

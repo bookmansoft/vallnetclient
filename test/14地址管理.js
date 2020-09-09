@@ -6,11 +6,19 @@
 const assert = require('assert');
 const remote = (require('./util/connector'))();
 
-let env = {};
+let env = {
+    account: 'default',
+};
 
 describe('14. 地址管理', function() {
     after(()=>{
         remote.close();
+    });
+
+    before(()=>{
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 指定账户名称: ${env.account}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     it('14.1 创建地址', async () => {
@@ -23,28 +31,30 @@ describe('14. 地址管理', function() {
     it('14.2 查询余额', async () => {
         let ret = await remote.execute('getAddressSummary', [env.address]);
         assert(!ret.error);
-        console.log(`获取指定地址金额汇总信息, 返回码: ${ret.error?-1:0}, 金额: ${ret}`);
-        env.summary = ret;
+        console.log(`获取指定地址${env.address}金额汇总信息, 返回码: ${ret.error?-1:0}, 查询结果: ${JSON.stringify(ret)}`);
     });
 
     it('14.3 查询账户地址', async () => {
-        let ret = await remote.execute('address.receive', ['default']);
+        let ret = await remote.execute('address.receive', [env.account]);
         assert(!ret.error);
-        console.log(`列表指定账户下收款地址, 返回码: ${ret.error?-1:0}, 收款地址: ${ret}`);
+        console.log(`列表指定账户${env.account}下收款地址, 返回码: ${ret.error?-1:0}, 收款地址: ${ret}`);
     });
 
     it('14.4 查询概要', async () => {
         let ret = await remote.get(`addr/${env.address}`); 
         assert(!ret.error);
         env.balance = ret;
-        console.log(`获取指定地址的汇总信息, 返回码: ${ret.error?-1:0}, 余额: ${ret}`);
+        console.log(`获取指定地址${env.address}的汇总信息, 返回码: ${ret.error?-1:0}, 查询结果: ${JSON.stringify(ret)}`);
     });
 
     it('14.5 查询进项', async () => {
         let ret = await remote.execute('address.received.list', []);
         assert(!ret.error);
         env.receivedList = ret;
-        console.log(`根据地址查询进项, 返回码: ${ret.error?-1:0}`);
+        console.log(`按照地址列表进项总额, 返回码: ${ret.error?-1:0}`);
+        if(ret.length > 0) {
+            console.log('打印返回列表首条记录', JSON.stringify(ret[0]));
+        }
     });
 
     it('14.6 查询进项总额', async () => {
@@ -58,7 +68,7 @@ describe('14. 地址管理', function() {
         let ret = await remote.execute('address.account', [env.address]);
         assert(!ret.error);
         env.account = ret;
-        console.log(`查询指定地址对应的账户, 返回码: ${ret.error?-1:0}`);
+        console.log(`查询指定地址${env.address}对应的账户, 返回码: ${ret.error?-1:0}`);
     });
     
     // it('查询余额：获取指定地址金额汇总信息', async () => {

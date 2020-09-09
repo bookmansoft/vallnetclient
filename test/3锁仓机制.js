@@ -58,6 +58,11 @@ describe('3. 锁仓机制 - GIP0027', function() {
         ret = await remote.execute('address.create', [env.bob.name]);
         assert(ret.code == 0);
         env.bob.address = ret.result.address;
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 随机账户名称: ${env.alice.name}`);
+        console.log(`- 单笔转账金额: ${env.amount}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     for(let type of types) {
@@ -99,6 +104,10 @@ describe('3. 锁仓机制 - GIP0027', function() {
             ]);
             assert(ret.code == 0);
             console.log(`${typeName[type]}, 返回码: ${ret.code}`);
+
+            ret = await remote.execute('balance.all', [env.alice.name]);
+            assert(ret.code == 0);
+            console.log(`账户${env.alice.name}的当前锁仓额: ${ret.result.locked}`);
             
             ret = await remote.execute('tx.send', [
                 env.bob.address,

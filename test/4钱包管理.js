@@ -16,6 +16,7 @@ const remote = connector();
 //建立上下文对象
 let env = {
     import: {},
+    amount: 100000000,
     robin:  {id: uuid(), key:null, address:null},
 };
 
@@ -56,6 +57,10 @@ describe('4. 钱包管理', () => {
             null,               //public key used for multisig wallet
         ]);
         env.address = ret.id;
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 转账金额: ${env.amount}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     it('4.1 创建钱包', async () => {
@@ -71,18 +76,21 @@ describe('4. 钱包管理', () => {
         env.robin.amount = (await remote.execute('balance.all', [])).unconfirmed;
         //校验结果合理
         assert(env.robin.amount === 0);
+        console.log(`查询新钱包余额: ${env.robin.amount}`);
 
         //连接老钱包
         remote.setup({type: 'testnet', id: 'primary'});
         //为新钱包归属地址转账
-        await remote.execute('tx.send', [env.robin.address, 10000000]);
+        await remote.execute('tx.send', [env.robin.address, env.amount]);
+        console.log(`向新钱包转账: ${env.amount}`);
 
         //连接新钱包
         remote.setup({type: 'testnet', id: env.robin.id});
         //查询余额
         let amount = (await remote.execute('balance.all', [])).unconfirmed;
         //校验结果合理
-        assert(amount , env.robin.amount + 10000000);
+        assert(amount , env.robin.amount + env.amount);
+        console.log(`再次查询新钱包余额: ${amount}`);
 
         //重新连接老钱包(恢复现场)
         remote.setup({type: 'testnet', id: 'primary'});

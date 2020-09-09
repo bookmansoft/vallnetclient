@@ -69,6 +69,11 @@ describe('6. 跨链机制 - GIP0028', () => {
     env.alice.name = uuidv1();
 		env.bob.name = uuidv1();
 
+    console.log(`[模拟输入数据开始]`);
+    console.log(`- 发起方账户: ${env.alice.name}`);
+    console.log(`- 对手方账户: ${env.bob.name}`);
+    console.log(`[模拟输入数据结束]`);
+
     await remoteA.execute('miner.setsync.admin', [true]);
     let ret = await remoteA.execute('block.tips', []);
     if(ret.result[0].height < 100) {
@@ -100,7 +105,7 @@ describe('6. 跨链机制 - GIP0028', () => {
 
           if(!indicator.check(1<<7)) {
             indicator.set(1<<7);
-            console.log(`6.3 对手方响应跨链交易请求，返回码: ${ret.code}`);
+            console.log(`6.3 对手方${env.bob.name}响应跨链交易请求，返回码: ${ret.code}`);
           }
           
 					await remoteB.execute('miner.generate.admin', [1]);
@@ -117,7 +122,7 @@ describe('6. 跨链机制 - GIP0028', () => {
             master: msg.alice, //使用Alice的A链地址发起取消交易
           }, env.bob.name]);
           assert(ret.code == 0);
-          console.log(`6.2 发起方取消先前发起的跨链交易请求, 返回码: ${ret.code}`);
+          console.log(`6.2 发起方${env.alice.name}取消先前发起的跨链交易请求, 返回码: ${ret.code}`);
           indicator.set(1<<1);
 
           //数据上链
@@ -149,7 +154,7 @@ describe('6. 跨链机制 - GIP0028', () => {
           assert(ret.code == 0);
 
           if(!indicator.check(1<<8)) {
-            console.log(`6.5 发起方兑现先前发起的请求，返回码: ${ret.code}`);
+            console.log(`6.5 发起方${env.alice.name}兑现先前发起的请求，返回码: ${ret.code}`);
             indicator.set(1<<8);
           }
           
@@ -167,7 +172,7 @@ describe('6. 跨链机制 - GIP0028', () => {
             master: msg.bob, //使用Bob的B链地址发起取消交易
           }, env.bob.name]);
           assert(ret.code == 0);
-          console.log(`6.4 对手方取消对跨链交易请求的响应, 返回码: ${ret.code}`);
+          console.log(`6.4 对手方${env.bob.name}取消对跨链交易请求的响应, 返回码: ${ret.code}`);
           
 					ret = await remoteB.execute('miner.generate.admin', [1]);
 					assert(ret.code == 0);
@@ -184,7 +189,7 @@ describe('6. 跨链机制 - GIP0028', () => {
           sa: msg.secret,
         }, env.bob.name]);
         assert(ret.code == 0);
-        console.log(`6.6 对手方兑现先前做出的响应，返回码: ${ret.code}`);
+        console.log(`6.6 对手方${env.bob.name}兑现先前做出的响应，返回码: ${ret.code}`);
         //console.log('兑现合约(htlc.suggest.deal)');
         
 				ret = await remoteA.execute('miner.generate.admin', [1]);
@@ -230,7 +235,7 @@ describe('6. 跨链机制 - GIP0028', () => {
       assert(ret.code == 0);
       //console.log('发布跨链合约(htlc.suggest)');
       if(!indicator.check(1<<24)) {
-        console.log(`6.1 提交A/B双方账号、兑换金额、兑换比例，发起一笔跨链交易请求, 返回码: ${ret.code}`);
+        console.log(`6.1 发起方${env.alice.name}提交兑换双方账号，发起一笔跨链交易请求, 返回码: ${ret.code}`);
         indicator.set(1<<24);
       }
       

@@ -51,6 +51,11 @@ describe('2. 用户管理', () => {
         if(ret.result[0].height < 100) {
             await remote.execute('miner.generate.admin', [100-ret.result[0].height]);
         }
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 随机账户名称: ${env.account}`);
+        console.log(`- 随机转账金额: ${env.amount}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     after(async () => {

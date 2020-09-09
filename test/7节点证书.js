@@ -7,8 +7,8 @@
  */
 
 const assert = require('assert')
-const uuid = require('uuid/v1');
-const connector = require('./util/connector');
+const uuid = require('uuid/v1')
+const connector = require('./util/connector')
 
 let env = {
     bossOid: 'xxxxxxxx-vallnet-boss-tokenxxxxx0000',
@@ -38,20 +38,25 @@ describe('7. 节点证书', () => {
         if(ret[0].height < 100) {
             await remote.execute('miner.generate.admin', [100 - ret[0].height]);
         }
-    });
 
-    it('7.1 验证证书', async () => {
-        let ret = await remote.execute('address.create', [env.alice.name]);
+        ret = await remote.execute('address.create', [env.alice.name]);
         assert(!ret.error);
         env.alice.address = ret.address;
 
         await remote.execute('tx.send', [env.alice.address, 500000000]);
         assert(!ret.error);
 
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 随机账户名称: ${env.alice.name}`);
+        console.log(`- 随机账户地址: ${env.alice.address}`);
+        console.log(`[模拟输入数据结束]`);
+    });
+
+    it('7.1 验证证书', async () => {
         //获取记账证书前，Alice记账失败
-        ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
+        let ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
         assert(!!ret.error);
-        console.log(`提交无证书的账号进行记账，返回码: ${ret.error?-1:0}`);
+        console.log(`提交无证书的账号${env.alice.name}进行记账，返回码: ${ret.error?-1:0}`);
     });
 
     it('7.2 查询证书', async () => {
@@ -65,16 +70,21 @@ describe('7. 节点证书', () => {
 
         env.miner.pid = ret.list[0].pid;
         env.miner.address = ret.list[0].current.address;
+        console.log(`随机选定其名下记账证书: ${env.miner.pid}`);
     });
 
     it('7.3 转让证书', async () => {
         //转让记账证书
         let ret = await remote.execute('prop.send', [env.alice.address, env.miner.pid]);
         assert(!ret.error);
-        console.log(`提交用户地址、证书编号，向其转让证书，返回码: ${ret.error?-1:0}`);
+        console.log(`提交用户账号地址和指定证书编号${env.miner.pid}，向其转让证书，返回码: ${ret.error?-1:0}`);
 
         //生成足够区块以切换统计区间，确保证书转移生效
         await remote.execute('miner.generate.admin', [28]);
+
+        ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
+        assert(!ret.error);
+        console.log(`账号${env.alice.name}获取证书后进行记账，返回码: ${ret.error?-1:0}`);
     });
 
     // it('查询证书：查询Alice名下的记账证书', async () => {

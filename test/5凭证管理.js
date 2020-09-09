@@ -43,6 +43,16 @@ describe('5. 凭证管理', () => {
             sn: ()=>{return "oid-bob-"+ uuid().slice(0,28);},     //订单编号
         };
 
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 机构名称: ${cp.name}`);
+        console.log(`- 发起方账户: ${alice.name}`);
+        console.log(`- 对手方账户: ${bob.name}`);
+        console.log(`- 初始发行价格: 1000`);
+        console.log(`- 初始发行数量: 1000`);
+        console.log(`- 支付交易总额: 2000000000`);
+        console.log(`- 媒体分润比例: 15%`);
+        console.log(`[模拟输入数据结束]`);
+
         it('5.1 一级市场发行', async () => {
             //一级市场发行 - CP不存在
             let ret = await remote.execute('stock.offer', [cp.name, 1000, 1000]);

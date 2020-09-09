@@ -9,6 +9,10 @@ const uuid = require('uuid/v1')
 const assert = require('assert');
 const remote = (require('./util/connector'))({structured: true});
 
+let env = {
+    name: uuid(),
+    newName: "cp-new-"+uuid().slice(0,29),
+};
 let cp = {};
 
 describe('11. 机构管理', () => {
@@ -24,6 +28,11 @@ describe('11. 机构管理', () => {
         }
         await remote.execute('miner.generate.admin', [1]);
         await remote.wait(1000);
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 机构名称: ${env.name}`);
+        console.log(`- 新的名称: ${env.newName}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     it('11.1 创建机构', async ()=>{
@@ -39,7 +48,7 @@ describe('11. 机构管理', () => {
         ret = await remote.execute('cp.create', [cp.name, '']);
         assert(ret.error);
 
-        cp.name = uuid();   //修复名称
+        cp.name = env.name;   //修复名称
         cp.grate = 60;      //媒体分成太高
 
         ret = await remote.execute('cp.create', [cp.name, `,,,${cp.grate}`]);
@@ -66,7 +75,7 @@ describe('11. 机构管理', () => {
 
         ret = await remote.execute('cp.create', [cp.name, `${cp.url},,${cp.cls},${cp.grate}`]);
         assert(!ret.error);
-        console.log(`提交机构名称、IP地址，创建一个机构，返回码: ${ret.error?-1:0}`);
+        console.log(`提交机构名称、IP地址，创建一个机构，返回码: ${ret.error?-1:0}, 机构编号: ${ret.result.cid}`);
 
         cp.cid = ret.result.cid; //记录CP编码
     });
@@ -84,13 +93,13 @@ describe('11. 机构管理', () => {
 
         ret = await remote.execute('cp.query', [[['cid', cp.cid]]]);
         assert(ret.result.list.length == 1);
-        console.log(`根据机构编号查询机构信息，返回码: ${ret.result.code}`);
+        console.log(`根据机构编号${cp.cid}查询机构信息，返回码: ${ret.code}, 机构信息:${JSON.stringify(ret.result)}`);
 
         rt = await remote.execute('cp.remoteQuery', [[['cid', cp.cid]]]);
         assert(rt.result.list.length == 1);
     });
 
-    it('11.3 修改机构：修改厂商分成比例 - 成功', async ()=>{
+    it('11.3 修改机构', async ()=>{
         //修改机构：修改厂商名称 - 名称非法
         cp.newName = 'ac';
 
@@ -98,8 +107,8 @@ describe('11. 机构管理', () => {
         assert(ret.error);
 
         //修改机构：修改厂商分成比例 - 失败
-        cp.newName = "cp-new-"+uuid().slice(0,29);    //修复名称
-        cp.grate = 50;          //分成比例超限
+        cp.newName = env.newName;   //修复名称
+        cp.grate = 50;              //分成比例超限
 
         ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(ret.error);
@@ -109,16 +118,17 @@ describe('11. 机构管理', () => {
 
         ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(!ret.error);
-        console.log(`修改机构已登记信息，返回码: ${ret.result.code}`);
+        console.log(`修改机构已登记信息(名称变更)，返回码: ${ret.code}`);
         await remote.execute('miner.generate.admin', [1]);
-    });
 
-    it('11.3 修改机构：修改厂商分类 - 成功', async ()=>{
         cp.cls = 'rpg';
 
-        let ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
+        ret = await remote.execute('cp.change', [cp.cid, `${cp.newName},${cp.url},,${cp.cls},${cp.grate}`]);
         assert(!ret.error);
         await remote.execute('miner.generate.admin', [1]);
+
+        ret = await remote.execute('cp.query', [[['cid', cp.cid]]]);
+        console.log(`根据机构编号${cp.cid}查询机构信息，返回码: ${ret.code}, 机构信息:${JSON.stringify(ret.result)}`);
     });
 
     // it('查询机构：查询厂商信息 - 成功', async () => {

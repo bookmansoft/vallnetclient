@@ -48,7 +48,21 @@ describe('9. 节点管理', () => {
             //console.log('node exit.');
         });
 
-        await remote.wait(3000);
+        await remote.wait(5000);
+
+        let ret = await remote.execute('miner.generate.admin', [1]);
+        assert(!ret.error);
+        env.blockid = common.revHex(ret[0]);
+        await remote.wait(1000);
+
+        ret = await remote.execute('block.tips', []);
+        assert(!ret.error);
+        env.height = parseInt(ret[0].height);
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 指定区块编号: ${env.blockid}`);
+        console.log(`- 指定区块高度: ${env.height}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     it('9.2 自动记账', async () => {
@@ -67,16 +81,15 @@ describe('9. 节点管理', () => {
 
         ret = await remote.execute('block.tips', []);
         assert(!ret.error);
-        env.height = parseInt(ret[0].height);
+        let height = parseInt(ret[0].height);
 
         ret = await remote.execute('miner.generate.admin', [1]);
         assert(!ret.error);
-        env.blockid = common.revHex(ret[0]);
         await remote.wait(1000);
 
         ret = await remote.execute('block.tips', []);
         assert(!ret.error);
-        assert(env.height == parseInt(ret[0].height) - 1);
+        assert(height == parseInt(ret[0].height) - 1);
     });
 
     it('9.4 查询记账设置', async () => {

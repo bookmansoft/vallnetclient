@@ -15,16 +15,11 @@ const gamegold = require('gamegold');
 const consensus = gamegold.consensus;
 
 let env = {
-    bossOid: 'xxxxxxxx-vallnet-boss-tokenxxxxx0000',
-    bossCid: 'xxxxxxxx-vallnet-boss-xxxxxxxxxxxxxx',
-    miner: {
-        pid: '',
-        address: '',
-    },
     alice: {
         name: uuid(),
         address: '',
-    }
+    },
+    amount: 100000000,
 }
 
 const remote = connector();
@@ -40,6 +35,12 @@ describe('8. 节点选举', () => {
         if(ret[0].height < 100) {
             await remote.execute('miner.generate.admin', [100 - ret[0].height]);
         }
+
+        console.log(`[模拟输入数据开始]`);
+        console.log(`- 随机账户名称: ${env.alice.name}`);
+        console.log(`- 随机账户地址: ${env.alice.address}`);
+        console.log(`- 投票数: ${env.amount}`);
+        console.log(`[模拟输入数据结束]`);
     });
 
     for(let i = 0; i < 1; i++) {
@@ -54,7 +55,7 @@ describe('8. 节点选举', () => {
         });
 
         it('8.2 投票选举', async () => {
-            let ret = await remote.execute('vote.send', [env.alice.address, 100000000]);
+            let ret = await remote.execute('vote.send', [env.alice.address, env.amount]);
             assert(!ret.error);
             console.log(`提交账号名称${env.alice.name}、投票数，为其记账权进行投票，返回码: ${ret.error?-1:0}`);
 
@@ -71,6 +72,7 @@ describe('8. 节点选举', () => {
             //验证选举权：投票后，Alice记账成功
             ret = await remote.execute('miner.generateto.admin', [1, env.alice.address]);
             assert(!ret.error);
+            console.log(`投票后，提交当选账号(${env.alice.name})执行记账，返回码: ${ret.error?-1:0}`);
         });
     }
 });
